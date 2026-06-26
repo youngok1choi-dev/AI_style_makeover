@@ -384,171 +384,89 @@ const STEPS_M=[
 // ── STATE ──
 let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComment="",afterImgUrl="";
 
-// ── 의상 키워드 → Unsplash 공식 검색 URL 매핑 ──
-// Unsplash source API 종료로 인해 키워드 기반 curated seed 방식으로 전환
-// Picsum + 의상 특화 시드값으로 실제 의류 느낌 연출
-const IMG_MAP = {
-  // 여성 클래식
-  "navy wool coat women elegant":       "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&h=750&fit=crop",
-  "pearl cashmere turtleneck women":    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=750&fit=crop",
-  "charcoal blazer women sophisticated":"https://images.unsplash.com/photo-1594938298603-c8148c4f8e8a?w=600&h=750&fit=crop",
-  "camel trench coat women":            "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&h=750&fit=crop",
-  "brown tweed jacket women":           "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&h=750&fit=crop",
-  "beige wool coat chic":               "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&h=750&fit=crop",
-  "olive women blazer elegant":         "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=600&h=750&fit=crop",
-  "grey coat women sophisticated":      "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&h=750&fit=crop",
-  "taupe women classic":                "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=750&fit=crop",
-  "burgundy coat women elegant":        "https://images.unsplash.com/photo-1520367445093-50dc08a59d9d?w=600&h=750&fit=crop",
-  "navy women blazer classic":          "https://images.unsplash.com/photo-1544441893-675973e31985?w=600&h=750&fit=crop",
-  "chocolate women suit":               "https://images.unsplash.com/photo-1536766820879-059fec98ec0a?w=600&h=750&fit=crop",
-  // 여성 포멀
-  "steel blue power suit women":        "https://images.unsplash.com/photo-1591085686350-798c0f9faa7f?w=600&h=750&fit=crop",
-  "charcoal suit women professional":   "https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=600&h=750&fit=crop",
-  "grey blazer women formal":           "https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=600&h=750&fit=crop",
-  "caramel office blazer women":        "https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=600&h=750&fit=crop",
-  "brown formal suit women":            "https://images.unsplash.com/photo-1548549557-dbe9946621da?w=600&h=750&fit=crop",
-  "mustard jacket structured":          "https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=600&h=750&fit=crop",
-  "olive grey suit women formal":       "https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?w=600&h=750&fit=crop",
-  "mocha blazer women":                 "https://images.unsplash.com/photo-1611042553365-9b101441c135?w=600&h=750&fit=crop",
-  "khaki formal women":                 "https://images.unsplash.com/photo-1617952739667-7c86f64b8f8b?w=600&h=750&fit=crop",
-  "deep navy formal suit women":        "https://images.unsplash.com/photo-1560243563-062bfc001d68?w=600&h=750&fit=crop",
-  "forest green blazer office":         "https://images.unsplash.com/photo-1612336307429-8a898d10e223?w=600&h=750&fit=crop",
-  "dark plum women formal":             "https://images.unsplash.com/photo-1617721618292-0f09dd67b2ef?w=600&h=750&fit=crop",
-  // 여성 시크/미니멀
-  "cool tone turtleneck chic women":    "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&h=750&fit=crop",
-  "minimalist cool women outfit":       "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&h=750&fit=crop",
-  "modern silk blouse women":           "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=750&fit=crop",
-  "camel slim chic women":              "https://images.unsplash.com/photo-1543087903-1ac2364fd7bf?w=600&h=750&fit=crop",
-  "warm tone minimalist women":         "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=750&fit=crop&sat=-20",
-  "rust silk women":                    "https://images.unsplash.com/photo-1614093302611-8efc4a5e7f47?w=600&h=750&fit=crop",
-  "greige minimalist women":            "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=600&h=750&fit=crop",
-  "neutral silk women":                 "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&h=750&fit=crop",
-  "taupe sleek women":                  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=750&fit=crop&sat=-30",
-  "dark sophisticated women":           "https://images.unsplash.com/photo-1520367445093-50dc08a59d9d?w=600&h=750&fit=crop&bri=-20",
-  "deep tone women look":               "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&h=750&fit=crop&bri=-20",
-  "dramatic silk women":                "https://images.unsplash.com/photo-1614093302611-8efc4a5e7f47?w=600&h=750&fit=crop&bri=-10",
-  // 여성 페미닌
-  "dusty blue midi dress women":        "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&h=750&fit=crop",
-  "lilac elegant dress women":          "https://images.unsplash.com/photo-1617952739667-7c86f64b8f8b?w=600&h=750&fit=crop&hue=270",
-  "cool floral midi women":             "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=750&fit=crop",
-  "peach midi dress women":             "https://images.unsplash.com/photo-1566479179817-c0c5cc15a8b5?w=600&h=750&fit=crop",
-  "warm floral women dress":            "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&h=750&fit=crop",
-  "dusty rose elegant":                 "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&h=750&fit=crop",
-  "sage green dress women":             "https://images.unsplash.com/photo-1576869682565-cfca4fe6c3a5?w=600&h=750&fit=crop",
-  "khaki feminine midi":                "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=600&h=750&fit=crop",
-  "natural feminine dress":             "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&h=750&fit=crop",
-  "deep rose elegant dress women":      "https://images.unsplash.com/photo-1568252542512-9fe8fe9c87bb?w=600&h=750&fit=crop",
-  "plum feminine midi":                 "https://images.unsplash.com/photo-1617952739667-7c86f64b8f8b?w=600&h=750&fit=crop",
-  "dark floral elegant":                "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=750&fit=crop&bri=-20",
-  // 여성 내추럴
-  "linen cool grey women":              "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=600&h=750&fit=crop",
-  "blue linen women":                   "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&h=750&fit=crop",
-  "natural cool tone women":            "https://images.unsplash.com/photo-1584143284027-2c3efcef9c8a?w=600&h=750&fit=crop",
-  "warm beige linen women":             "https://images.unsplash.com/photo-1554568218-0f1715e72254?w=600&h=750&fit=crop",
-  "earth tone women relaxed":           "https://images.unsplash.com/photo-1506902159-207f8b090c29?w=600&h=750&fit=crop",
-  "warm linen chic":                    "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&h=750&fit=crop",
-  "earth tone linen casual women":      "https://images.unsplash.com/photo-1526041092449-209d556f9a5f?w=600&h=750&fit=crop",
-  "relaxed taupe women":                "https://images.unsplash.com/photo-1561655765-8c5285d3e1b8?w=600&h=750&fit=crop",
-  "neutral linen women":                "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&h=750&fit=crop",
-  "dark earth linen women":             "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&h=750&fit=crop",
-  "deep tone relaxed women":            "https://images.unsplash.com/photo-1559563458-527698bf5295?w=600&h=750&fit=crop",
-  "forest women casual":                "https://images.unsplash.com/photo-1543946602-a0fce8117697?w=600&h=750&fit=crop",
-  // 남성 클래식
-  "classic navy suit men elegant":      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=750&fit=crop",
-  "grey wool coat men sophisticated":   "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&h=750&fit=crop",
-  "white dress shirt men classic":      "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=750&fit=crop",
-  "camel coat men elegant":             "https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?w=600&h=750&fit=crop",
-  "brown tweed jacket men":             "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&h=750&fit=crop",
-  "warm tone men classic suit":         "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600&h=750&fit=crop",
-  "grey suit men classic":              "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&h=750&fit=crop",
-  "olive men blazer":                   "https://images.unsplash.com/photo-1541823709867-1b206113eafd?w=600&h=750&fit=crop",
-  "taupe men coat elegant":             "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=750&fit=crop",
-  "dark navy men suit":                 "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-  "charcoal men formal":                "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&h=750&fit=crop",
-  "black wool coat men":                "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&h=750&fit=crop",
-  // 남성 비즈니스
-  "blue power suit men professional":   "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&h=750&fit=crop",
-  "grey business suit men":             "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&h=750&fit=crop",
-  "steel blue men blazer":              "https://images.unsplash.com/photo-1529391409740-59f2cea08bc8?w=600&h=750&fit=crop",
-  "brown business suit men":            "https://images.unsplash.com/photo-1514222134-b57cbb8ce073?w=600&h=750&fit=crop",
-  "warm tone men formal":               "https://images.unsplash.com/photo-1519058082700-08a0b56da9b4?w=600&h=750&fit=crop",
-  "caramel blazer men office":          "https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&h=750&fit=crop",
-  "neutral grey men suit":              "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&h=750&fit=crop",
-  "olive men business":                 "https://images.unsplash.com/photo-1541823709867-1b206113eafd?w=600&h=750&fit=crop",
-  "khaki men formal":                   "https://images.unsplash.com/photo-1520975916090-f8a97906f8b4?w=600&h=750&fit=crop",
-  "dark men business suit":             "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-  "charcoal men office":                "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&h=750&fit=crop",
-  "deep navy men professional":         "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&h=750&fit=crop",
-  // 남성 스트리트/스마트캐주얼/내추럴
-  "urban men streetwear cool":          "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&h=750&fit=crop",
-  "minimalist men street style":        "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=750&fit=crop",
-  "modern men casual cool":             "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&h=750&fit=crop",
-  "earth tone men streetwear":          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=750&fit=crop",
-  "warm casual men outfit":             "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&h=750&fit=crop",
-  "camel men street style":             "https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?w=600&h=750&fit=crop",
-  "neutral men street casual":          "https://images.unsplash.com/photo-1519058082700-08a0b56da9b4?w=600&h=750&fit=crop",
-  "greige men outfit":                  "https://images.unsplash.com/photo-1520975916090-f8a97906f8b4?w=600&h=750&fit=crop",
-  "taupe men casual":                   "https://images.unsplash.com/photo-1529391409740-59f2cea08bc8?w=600&h=750&fit=crop",
-  "dark men street style":              "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&h=750&fit=crop",
-  "all black men outfit":               "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-  "deep tone men urban":                "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&h=750&fit=crop",
-  "smart casual men cool tone":         "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=750&fit=crop",
-  "business casual men blue":           "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&h=750&fit=crop",
-  "men polo smart":                     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=750&fit=crop",
-  "smart casual men warm":              "https://images.unsplash.com/photo-1514222134-b57cbb8ce073?w=600&h=750&fit=crop",
-  "business casual men earth":          "https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&h=750&fit=crop",
-  "men chino warm":                     "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&h=750&fit=crop",
-  "smart casual men neutral":           "https://images.unsplash.com/photo-1541823709867-1b206113eafd?w=600&h=750&fit=crop",
-  "men chino greige":                   "https://images.unsplash.com/photo-1520975916090-f8a97906f8b4?w=600&h=750&fit=crop",
-  "relaxed men smart":                  "https://images.unsplash.com/photo-1529391409740-59f2cea08bc8?w=600&h=750&fit=crop",
-  "dark smart casual men":              "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-  "men dark trousers smart":            "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&h=750&fit=crop",
-  "deep men business casual":           "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&h=750&fit=crop",
-  "linen men cool":                     "https://images.unsplash.com/photo-1519058082700-08a0b56da9b4?w=600&h=750&fit=crop",
-  "men outdoor cool casual":            "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&h=750&fit=crop",
-  "natural men cool":                   "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&h=750&fit=crop",
-  "linen men warm beige":               "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=750&fit=crop",
-  "earth tone men casual":              "https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?w=600&h=750&fit=crop",
-  "warm men outdoor":                   "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=600&h=750&fit=crop",
-  "natural linen men":                  "https://images.unsplash.com/photo-1541823709867-1b206113eafd?w=600&h=750&fit=crop",
-  "earth men casual":                   "https://images.unsplash.com/photo-1520975916090-f8a97906f8b4?w=600&h=750&fit=crop",
-  "relaxed men neutral":                "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=750&fit=crop",
-  "dark earth men casual":              "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&h=750&fit=crop",
-  "men outdoor dark tone":              "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-  "forest men style":                   "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&h=750&fit=crop",
-  // fallback 기본값
-  "women elegant":                      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=750&fit=crop",
+// ── 의상 카드: 외부 이미지 의존 없이 CSS 그라디언트 + 텍스트로 표현 ──
+const OUTFIT_CARD_DATA = {
+  // 여성 스타일별 카드 데이터 [그라디언트, 이모지, 한글명]
+  female: {
+    classic:  [
+      ['linear-gradient(145deg,#1a3a5c,#2d6a9f)','🧥','네이비 울 코트'],
+      ['linear-gradient(145deg,#e8e0d8,#c8b89a)','👔','캐시미어 터틀넥'],
+      ['linear-gradient(145deg,#4a4a4a,#2a2a2a)','👗','차콜 블레이저'],
+    ],
+    formal:   [
+      ['linear-gradient(145deg,#3a5f8a,#5b8fc0)','💼','스틸 블루 수트'],
+      ['linear-gradient(145deg,#5a3e2b,#8a6040)','👔','카라멜 오피스 자켓'],
+      ['linear-gradient(145deg,#2a3d2e,#4a6d50)','🧥','올리브 포멀 수트'],
+    ],
+    chic:     [
+      ['linear-gradient(145deg,#b0c4d8,#7a9aba)','👗','쿨톤 터틀넥'],
+      ['linear-gradient(145deg,#d4c4a8,#a89070)','✨','미니멀 실크 블라우스'],
+      ['linear-gradient(145deg,#c8b0a0,#987868)','🧣','그레이지 미니멀룩'],
+    ],
+    feminine: [
+      ['linear-gradient(145deg,#8ab4d4,#5a8ab0)','👗','더스티 블루 미디 드레스'],
+      ['linear-gradient(145deg,#f0b8a8,#d88870)','🌸','피치 미디 드레스'],
+      ['linear-gradient(145deg,#a8c8a0,#78a870)','🌿','세이지 그린 드레스'],
+    ],
+    natural:  [
+      ['linear-gradient(145deg,#c8c0b0,#a8a090)','🧵','리넨 쿨 그레이'],
+      ['linear-gradient(145deg,#d8c8a8,#b8a880)','☀️','웜베이지 리넨'],
+      ['linear-gradient(145deg,#b8a890,#988870)','🍂','어스톤 캐주얼'],
+    ],
+  },
+  male: {
+    classic:  [
+      ['linear-gradient(145deg,#1a2d4a,#2d4a6d)','🤵','클래식 네이비 수트'],
+      ['linear-gradient(145deg,#6a6060,#4a4040)','🧥','그레이 울 코트'],
+      ['linear-gradient(145deg,#d8c8a8,#b0906a)','👔','카멜 트렌치 코트'],
+    ],
+    business: [
+      ['linear-gradient(145deg,#2a4870,#3a6090)','💼','블루 파워 수트'],
+      ['linear-gradient(145deg,#5a4030,#7a6050)','👔','브라운 비즈니스 수트'],
+      ['linear-gradient(145deg,#3a3a3a,#5a5a5a)','🧥','차콜 오피스 수트'],
+    ],
+    street:   [
+      ['linear-gradient(145deg,#2a2a3a,#4a4a5a)','🧢','어반 스트리트웨어'],
+      ['linear-gradient(145deg,#6a5a40,#8a7a60)','👟','어스톤 캐주얼'],
+      ['linear-gradient(145deg,#d4c4a0,#b4a480)','🧣','카멜 스트리트 스타일'],
+    ],
+    smart:    [
+      ['linear-gradient(145deg,#3a5a8a,#5a7aaa)','👔','스마트 캐주얼 블루'],
+      ['linear-gradient(145deg,#6a5040,#8a7060)','🥿','웜톤 스마트 캐주얼'],
+      ['linear-gradient(145deg,#5a5a4a,#7a7a6a)','🧥','뉴트럴 스마트 캐주얼'],
+    ],
+    natural:  [
+      ['linear-gradient(145deg,#a0b0c0,#8090a0)','🌊','린넨 쿨'],
+      ['linear-gradient(145deg,#c8b890,#a89870)','🌾','웜베이지 린넨'],
+      ['linear-gradient(145deg,#6a7a5a,#8a9a7a)','🌲','포레스트 캐주얼'],
+    ],
+  }
 };
 
-// 폴백용 여성/남성 이미지 풀 (매핑 미스 시 랜덤 선택)
-const FALLBACK_F = [
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1594938298603-c8148c4f8e8a?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&h=750&fit=crop",
-];
-const FALLBACK_M = [
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1598032895397-b9472444bf93?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1495105787522-5334e3ffa0ef?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1541823709867-1b206113eafd?w=600&h=750&fit=crop",
-  "https://images.unsplash.com/photo-1600679472829-3044539ce8ed?w=600&h=750&fit=crop",
-];
-
-function imgUrl(q, i=0){
-  if(IMG_MAP[q]) return IMG_MAP[q];
-  // 매핑 없으면 성별에 따라 폴백 풀에서 시드 기반 선택
-  const pool = (curGender==='male') ? FALLBACK_M : FALLBACK_F;
-  return pool[(i * 3 + 7) % pool.length];
+function getCatKey(q){
+  q=q.toLowerCase();
+  if(curGender==='male'){
+    if(q.includes('classic')||q.includes('navy suit')||q.includes('tweed')||q.includes('camel coat')) return 'classic';
+    if(q.includes('business')||q.includes('professional')||q.includes('formal')) return 'business';
+    if(q.includes('street')||q.includes('urban')) return 'street';
+    if(q.includes('smart')||q.includes('polo')||q.includes('chino')) return 'smart';
+    return 'natural';
+  } else {
+    if(q.includes('wool coat')||q.includes('tweed')||q.includes('blazer')||q.includes('turtleneck')) return 'classic';
+    if(q.includes('formal')||q.includes('suit')||q.includes('power')||q.includes('office')) return 'formal';
+    if(q.includes('chic')||q.includes('minimalist')||q.includes('silk')) return 'chic';
+    if(q.includes('dress')||q.includes('feminine')||q.includes('floral')||q.includes('rose')) return 'feminine';
+    return 'natural';
+  }
 }
-
+// imgUrl은 더 이상 사용하지 않지만 호환성 유지
+function imgUrl(q,i=0){ return ''; }
+function getCardData(q,i=0){
+  const gender = curGender==='male'?'male':'female';
+  const cat = getCatKey(q);
+  const pool = OUTFIT_CARD_DATA[gender][cat]||OUTFIT_CARD_DATA[gender].classic;
+  return pool[Math.abs(i*3+7)%pool.length];
+}
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
   document.getElementById('page-result').style.display='none';
@@ -701,11 +619,15 @@ function buildResult(){
   document.getElementById('res-body-tip').textContent=bodyTip;
   document.getElementById('res-height-tip').textContent=HEIGHT_TIPS[height]||"";
 
-  // Outfit imgs
+  // Outfit CSS 카드 (외부 이미지 의존 제거)
   let imgHtml='';
   (oq||[]).slice(0,3).forEach((q,i)=>{
-    const u=imgUrl(q,i);
-    imgHtml+=`<div class="outfit-img-wrap" onclick="openLightbox('${u}')"><img src="${u}" alt="${clothes[i]||''}" onerror="this.style.display='none'"/><div class="outfit-label">${clothes[i]||''}</div><div class="zoom-badge">🔍</div></div>`;
+    const [grad,emo,label]=getCardData(q,i);
+    const itemLabel=clothes[i]||label;
+    imgHtml+=`<div class="outfit-img-wrap" style="background:${grad};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;">
+      <div style="font-size:52px;margin-bottom:12px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">${emo}</div>
+      <div style="color:#fff;font-size:12px;font-weight:700;text-align:center;padding:0 8px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${label}</div>
+      <div class="outfit-label">${itemLabel}</div></div>`;
   });
   document.getElementById('rec-imgs').innerHTML=imgHtml;
 
@@ -721,14 +643,26 @@ function buildResult(){
   document.getElementById('daily-rows').innerHTML=dailyHtml;
 
   // After img
-  afterImgUrl=imgUrl(oq?oq[0]:'women elegant',30);
-  document.getElementById('after-img').src=afterImgUrl;
+  // after-img를 CSS 카드로 교체
+  const [afterGrad,afterEmo,afterLbl]=getCardData(oq?oq[0]:'women elegant',30);
+  const afterEl=document.getElementById('after-img');
+  afterEl.style.display='none';
+  const afterWrap=afterEl.parentElement;
+  if(!afterWrap.querySelector('.css-after-card')){
+    const div=document.createElement('div');
+    div.className='css-after-card';
+    div.style.cssText=`width:100%;height:100%;background:${afterGrad};display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;`;
+    div.innerHTML=`<div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4))">${afterEmo}</div><div style="color:#fff;font-size:14px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${afterLbl}</div>`;
+    afterWrap.appendChild(div);
+  }
+  afterImgUrl='';
   document.getElementById('after-label').textContent=si.name;
 
   let afterHtml='';
   (oq||[]).slice(0,4).forEach((q,i)=>{
-    const u=imgUrl(q,i+20);
-    afterHtml+=`<div class="outfit-img-wrap" onclick="openLightbox('${u}')"><img src="${u}" alt="${clothes[i]||''}" onerror="this.style.display='none'"/><div class="outfit-label">${clothes[i]||''}</div><div class="zoom-badge">🔍</div></div>`;
+    const [grad,emo,label]=getCardData(q,i+20);
+    const itemLabel=clothes[i]||label;
+    afterHtml+=`<div class="outfit-img-wrap" style="background:${grad};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;"><div style="font-size:48px;margin-bottom:10px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">${emo}</div><div style="color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 8px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${label}</div><div class="outfit-label">${itemLabel}</div></div>`;
   });
   document.getElementById('after-imgs').innerHTML=afterHtml;
 }
