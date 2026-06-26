@@ -388,44 +388,36 @@ let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComme
 const RAW_BASE = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images";
 
 // ── 실제 패션 모델 착장 사진 (GitHub raw CDN, CC0 라이선스) ──
-const RAW_PEOPLE = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";
+// ── 실제 의류 실착 사진 (CC0 공개 데이터셋 - GitHub raw CDN) ──
+// 출처: CatVTON (Zheng-Chong), VITON-HD (yisol/IDM-VTON)
+// 라이선스: MIT / Apache 2.0 공개 연구 데이터셋
 
-// 여성 사진: CatVTON + VITON-HD 공개 데이터셋 (CC0)
-// 남성 사진: CatVTON 공개 데이터셋 (CC0)
-const FASHION_IMG = {
-  // ── 여성 ──
-  "female_classic":  `${RAW_PEOPLE}/f_05.jpg`,   // 정장 착장 여성
-  "female_formal":   `${RAW_PEOPLE}/f_06.jpg`,   // 포멀 착장 여성
-  "female_chic":     `${RAW_PEOPLE}/f_02.png`,   // 시크 착장 여성
-  "female_feminine": `${RAW_PEOPLE}/f_08.jpg`,   // 페미닌 착장 여성
-  "female_natural":  `${RAW_PEOPLE}/f_03.png`,   // 내추럴 착장 여성
-  "female_extra1":   `${RAW_PEOPLE}/f_01.jpg`,
-  "female_extra2":   `${RAW_PEOPLE}/f_04.png`,
-  "female_extra3":   `${RAW_PEOPLE}/f_07.jpg`,
-  // ── 남성 ──
-  "male_classic":    `${RAW_PEOPLE}/m_01.png`,   // 클래식 정장 남성
-  "male_business":   `${RAW_PEOPLE}/m_02.png`,   // 비즈니스 남성
-  "male_street":     `${RAW_PEOPLE}/m_03.png`,   // 스트리트 남성
-  "male_smart":      `${RAW_PEOPLE}/m_04.png`,   // 스마트캐주얼 남성
-  "male_natural":    `${RAW_PEOPLE}/m_01.png`,   // 내추럴 남성 (폴백)
+const P = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";  // GitHub raw base URL
+
+// ─── 여성 스타일별 실착 모델 사진 ───
+const FEMALE_STYLE = {
+  classic:  [`${P}/f_classic.jpg`,  `${P}/f_extra2.jpg`, `${P}/f_extra3.jpg`],
+  formal:   [`${P}/f_formal.jpg`,   `${P}/f_extra4.jpg`, `${P}/f_extra1.jpg`],
+  chic:     [`${P}/f_chic.png`,     `${P}/f_extra5.jpg`, `${P}/f_extra6.jpeg`],
+  feminine: [`${P}/f_feminine.png`, `${P}/f_extra2.jpg`, `${P}/f_extra3.jpg`],
+  natural:  [`${P}/f_natural.png`,  `${P}/f_extra1.jpg`, `${P}/f_extra4.jpg`],
 };
 
-// 여성 착장 이미지 풀 (4장 로테이션)
-const FEMALE_POOL = [
-  `${RAW_PEOPLE}/f_01.jpg`,
-  `${RAW_PEOPLE}/f_02.png`,
-  `${RAW_PEOPLE}/f_03.png`,
-  `${RAW_PEOPLE}/f_04.png`,
-  `${RAW_PEOPLE}/f_05.jpg`,
-  `${RAW_PEOPLE}/f_06.jpg`,
-  `${RAW_PEOPLE}/f_07.jpg`,
-  `${RAW_PEOPLE}/f_08.jpg`,
-];
-const MALE_POOL = [
-  `${RAW_PEOPLE}/m_01.png`,
-  `${RAW_PEOPLE}/m_02.png`,
-  `${RAW_PEOPLE}/m_03.png`,
-  `${RAW_PEOPLE}/m_04.png`,
+// ─── 남성 스타일별 실착 모델 사진 ───
+const MALE_STYLE = {
+  classic:  [`${P}/m_classic.png`,  `${P}/m_smart.png`,    `${P}/m_business.png`],
+  business: [`${P}/m_business.png`, `${P}/m_classic.png`,  `${P}/m_smart.png`],
+  street:   [`${P}/m_street.png`,   `${P}/m_smart.png`,    `${P}/m_classic.png`],
+  smart:    [`${P}/m_smart.png`,    `${P}/m_business.png`, `${P}/m_street.png`],
+  natural:  [`${P}/m_street.png`,   `${P}/m_classic.png`,  `${P}/m_smart.png`],
+};
+
+// 의류 단품 풀 (추천 의상 카드 배경용)
+const CLOTH_POOL = [
+  `${P}/ic_01.jpg`, `${P}/ic_02.jpg`, `${P}/ic_03.jpg`,
+  `${P}/ic_04.jpg`, `${P}/ic_05.jpg`,
+  `${P}/co_01.jpg`, `${P}/co_02.jpg`, `${P}/co_03.jpg`, `${P}/co_04.jpg`,
+  `${P}/cu_01.jpg`, `${P}/cu_02.jpg`, `${P}/cu_03.jpg`, `${P}/cu_04.jpg`,
 ];
 
 function getCatKey(q){
@@ -446,34 +438,34 @@ function getCatKey(q){
 }
 
 function getFashionImg(q, i=0){
-  const gender = curGender === 'male' ? 'male' : 'female';
   const cat = getCatKey(q);
-  const key = `${gender}_${cat}`;
-  if(FASHION_IMG[key]) return FASHION_IMG[key];
-  // 풀에서 인덱스 기반 선택
-  const pool = gender === 'male' ? MALE_POOL : FEMALE_POOL;
+  const pool = curGender === 'male'
+    ? (MALE_STYLE[cat]  || MALE_STYLE.classic)
+    : (FEMALE_STYLE[cat]|| FEMALE_STYLE.classic);
   return pool[Math.abs(i) % pool.length];
 }
 
-// 의상 카드 생성 (실제 모델 사진)
+// 의상 카드: 실착 모델 사진 풀스크린
 function makeOutfitCard(q, i, label){
   const imgSrc = getFashionImg(q, i);
   const div = document.createElement('div');
   div.className = 'outfit-img-wrap';
-  div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:#f0f4ff;';
+  div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:#e8f0ff;';
   div.onclick = () => openLightbox(imgSrc);
   div.innerHTML = `
     <img src="${imgSrc}"
-      style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;"
+      style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform 0.3s;"
+      onmouseover="this.style.transform='scale(1.04)'"
+      onmouseout="this.style.transform='scale(1)'"
       alt="${label}"
-      onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(145deg,#2A5EC8,#1a3d8f)';this.parentElement.innerHTML+='<div style=\'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:white;font-size:40px;\'>👗</div>'"/>
+      onerror="this.parentElement.innerHTML='<div style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:linear-gradient(145deg,#2A5EC8,#1a3d8f);color:white;gap:8px;\'><span style=\'font-size:40px;\'>👗</span><span style=\'font-size:12px;font-weight:700;\'>${label}</span></div><div class=\"outfit-label\">${label}</div>'"/>
     <div class="outfit-label">${label}</div>
     <div class="zoom-badge">🔍</div>`;
   return div;
 }
 
 function imgUrl(q, i=0){ return getFashionImg(q, i); }
-function getCardData(q, i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)', '👗', q]; }
+function getCardData(q, i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
   document.getElementById('page-result').style.display='none';
