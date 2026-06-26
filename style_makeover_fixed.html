@@ -384,64 +384,29 @@ const STEPS_M=[
 // ── STATE ──
 let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComment="",afterImgUrl="";
 
-// ── 의상 카드: 외부 이미지 의존 없이 CSS 그라디언트 + 텍스트로 표현 ──
-const OUTFIT_CARD_DATA = {
-  // 여성 스타일별 카드 데이터 [그라디언트, 이모지, 한글명]
+// ── 의상 이미지: Unsplash 공식 API (실제 패션 모델 사진) ──
+const UNSPLASH_KEY = "8Kd_AfkS4AlNlgJs8VRn9qdxdL-JE2q6GxiS1jQFqiA";
+
+// 스타일/성별 → Unsplash 검색 쿼리 매핑
+const UNSPLASH_QUERY = {
   female: {
-    classic:  [
-      ['linear-gradient(145deg,#1a3a5c,#2d6a9f)','🧥','네이비 울 코트'],
-      ['linear-gradient(145deg,#e8e0d8,#c8b89a)','👔','캐시미어 터틀넥'],
-      ['linear-gradient(145deg,#4a4a4a,#2a2a2a)','👗','차콜 블레이저'],
-    ],
-    formal:   [
-      ['linear-gradient(145deg,#3a5f8a,#5b8fc0)','💼','스틸 블루 수트'],
-      ['linear-gradient(145deg,#5a3e2b,#8a6040)','👔','카라멜 오피스 자켓'],
-      ['linear-gradient(145deg,#2a3d2e,#4a6d50)','🧥','올리브 포멀 수트'],
-    ],
-    chic:     [
-      ['linear-gradient(145deg,#b0c4d8,#7a9aba)','👗','쿨톤 터틀넥'],
-      ['linear-gradient(145deg,#d4c4a8,#a89070)','✨','미니멀 실크 블라우스'],
-      ['linear-gradient(145deg,#c8b0a0,#987868)','🧣','그레이지 미니멀룩'],
-    ],
-    feminine: [
-      ['linear-gradient(145deg,#8ab4d4,#5a8ab0)','👗','더스티 블루 미디 드레스'],
-      ['linear-gradient(145deg,#f0b8a8,#d88870)','🌸','피치 미디 드레스'],
-      ['linear-gradient(145deg,#a8c8a0,#78a870)','🌿','세이지 그린 드레스'],
-    ],
-    natural:  [
-      ['linear-gradient(145deg,#c8c0b0,#a8a090)','🧵','리넨 쿨 그레이'],
-      ['linear-gradient(145deg,#d8c8a8,#b8a880)','☀️','웜베이지 리넨'],
-      ['linear-gradient(145deg,#b8a890,#988870)','🍂','어스톤 캐주얼'],
-    ],
+    classic:  ["women elegant navy coat fashion","women classic blazer suit elegant","women sophisticated wool coat"],
+    formal:   ["women power suit professional","women office blazer formal","women business suit elegant"],
+    chic:     ["women minimalist chic outfit","women sleek turtleneck fashion","women silk blouse minimal"],
+    feminine: ["women midi dress elegant","women floral dress fashion","women feminine outfit"],
+    natural:  ["women linen casual chic","women earth tone fashion","women relaxed elegant outfit"],
   },
   male: {
-    classic:  [
-      ['linear-gradient(145deg,#1a2d4a,#2d4a6d)','🤵','클래식 네이비 수트'],
-      ['linear-gradient(145deg,#6a6060,#4a4040)','🧥','그레이 울 코트'],
-      ['linear-gradient(145deg,#d8c8a8,#b0906a)','👔','카멜 트렌치 코트'],
-    ],
-    business: [
-      ['linear-gradient(145deg,#2a4870,#3a6090)','💼','블루 파워 수트'],
-      ['linear-gradient(145deg,#5a4030,#7a6050)','👔','브라운 비즈니스 수트'],
-      ['linear-gradient(145deg,#3a3a3a,#5a5a5a)','🧥','차콜 오피스 수트'],
-    ],
-    street:   [
-      ['linear-gradient(145deg,#2a2a3a,#4a4a5a)','🧢','어반 스트리트웨어'],
-      ['linear-gradient(145deg,#6a5a40,#8a7a60)','👟','어스톤 캐주얼'],
-      ['linear-gradient(145deg,#d4c4a0,#b4a480)','🧣','카멜 스트리트 스타일'],
-    ],
-    smart:    [
-      ['linear-gradient(145deg,#3a5a8a,#5a7aaa)','👔','스마트 캐주얼 블루'],
-      ['linear-gradient(145deg,#6a5040,#8a7060)','🥿','웜톤 스마트 캐주얼'],
-      ['linear-gradient(145deg,#5a5a4a,#7a7a6a)','🧥','뉴트럴 스마트 캐주얼'],
-    ],
-    natural:  [
-      ['linear-gradient(145deg,#a0b0c0,#8090a0)','🌊','린넨 쿨'],
-      ['linear-gradient(145deg,#c8b890,#a89870)','🌾','웜베이지 린넨'],
-      ['linear-gradient(145deg,#6a7a5a,#8a9a7a)','🌲','포레스트 캐주얼'],
-    ],
+    classic:  ["men classic navy suit elegant","men sophisticated wool coat","men gentleman style suit"],
+    business: ["men business suit professional","men office suit formal","men power suit elegant"],
+    street:   ["men street style fashion","men urban casual outfit","men modern streetwear"],
+    smart:    ["men smart casual fashion","men chino blazer outfit","men business casual"],
+    natural:  ["men linen casual outfit","men earth tone style","men relaxed fashion"],
   }
 };
+
+// 이미지 캐시 (같은 쿼리 중복 요청 방지)
+const imgCache = {};
 
 function getCatKey(q){
   q=q.toLowerCase();
@@ -459,14 +424,63 @@ function getCatKey(q){
     return 'natural';
   }
 }
-// imgUrl은 더 이상 사용하지 않지만 호환성 유지
-function imgUrl(q,i=0){ return ''; }
-function getCardData(q,i=0){
-  const gender = curGender==='male'?'male':'female';
-  const cat = getCatKey(q);
-  const pool = OUTFIT_CARD_DATA[gender][cat]||OUTFIT_CARD_DATA[gender].classic;
-  return pool[Math.abs(i*3+7)%pool.length];
+
+// Unsplash에서 실제 패션 사진 로딩
+async function fetchUnsplashImg(query, page=1){
+  const cacheKey = query + page;
+  if(imgCache[cacheKey]) return imgCache[cacheKey];
+  try {
+    const res = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5&page=${page}&orientation=portrait&client_id=${UNSPLASH_KEY}`
+    );
+    const data = await res.json();
+    const photos = data.results||[];
+    if(photos.length > 0){
+      const idx = page % photos.length;
+      const url = photos[idx].urls.regular + '&w=600&h=750&fit=crop&crop=faces,center';
+      imgCache[cacheKey] = url;
+      return url;
+    }
+  } catch(e){ console.warn('Unsplash fetch failed:', e); }
+  return null;
 }
+
+// 이미지 카드 엘리먼트 생성 후 비동기 사진 로딩
+function makeOutfitCard(q, i, label, container, idx){
+  const cat = getCatKey(q);
+  const gender = curGender==='male'?'male':'female';
+  const queries = UNSPLASH_QUERY[gender][cat]||UNSPLASH_QUERY[gender].classic;
+  const searchQuery = queries[i % queries.length];
+  
+  // 먼저 로딩 플레이스홀더 표시
+  const div = document.createElement('div');
+  div.className = 'outfit-img-wrap';
+  div.style.cssText = 'background:linear-gradient(145deg,#d0d8e8,#b8c4d8);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  div.innerHTML = `<div style="font-size:32px;margin-bottom:8px;opacity:0.5">⏳</div><div style="color:#6080a0;font-size:11px">로딩중...</div>`;
+  
+  // 비동기로 실제 이미지 로딩
+  fetchUnsplashImg(searchQuery, i+1).then(url => {
+    if(url){
+      div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:#EEF4FF;aspect-ratio:3/4;box-shadow:0 4px 16px rgba(0,0,0,0.10);';
+      div.onclick = () => openLightbox(url);
+      div.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="${label}"/>
+        <div class="outfit-label">${label}</div>
+        <div class="zoom-badge">🔍</div>`;
+    } else {
+      // 폴백: 스타일 카드
+      div.style.background = 'linear-gradient(145deg,#2A5EC8,#6A3DB8)';
+      div.innerHTML = `<div style="font-size:48px;margin-bottom:10px">👗</div>
+        <div style="color:#fff;font-size:12px;font-weight:700">${label}</div>
+        <div class="outfit-label">${label}</div>`;
+    }
+  });
+  
+  return div;
+}
+
+// 레거시 호환
+function imgUrl(q,i=0){ return ''; }
+function getCardData(q,i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
   document.getElementById('page-result').style.display='none';
@@ -619,17 +633,13 @@ function buildResult(){
   document.getElementById('res-body-tip').textContent=bodyTip;
   document.getElementById('res-height-tip').textContent=HEIGHT_TIPS[height]||"";
 
-  // Outfit CSS 카드 (외부 이미지 의존 제거)
-  let imgHtml='';
+  // 추천 의상: Unsplash 실제 패션 사진 비동기 로딩
+  const recImgsEl = document.getElementById('rec-imgs');
+  recImgsEl.innerHTML = '';
   (oq||[]).slice(0,3).forEach((q,i)=>{
-    const [grad,emo,label]=getCardData(q,i);
-    const itemLabel=clothes[i]||label;
-    imgHtml+=`<div class="outfit-img-wrap" style="background:${grad};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;">
-      <div style="font-size:52px;margin-bottom:12px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">${emo}</div>
-      <div style="color:#fff;font-size:12px;font-weight:700;text-align:center;padding:0 8px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${label}</div>
-      <div class="outfit-label">${itemLabel}</div></div>`;
+    const card = makeOutfitCard(q, i, clothes[i]||q, recImgsEl, i);
+    recImgsEl.appendChild(card);
   });
-  document.getElementById('rec-imgs').innerHTML=imgHtml;
 
   let avoidHtml='';
   avoid.forEach(a=>{avoidHtml+=`<span class="avoid-tag">${a}</span>`;});
@@ -643,28 +653,42 @@ function buildResult(){
   document.getElementById('daily-rows').innerHTML=dailyHtml;
 
   // After img
-  // after-img를 CSS 카드로 교체
-  const [afterGrad,afterEmo,afterLbl]=getCardData(oq?oq[0]:'women elegant',30);
-  const afterEl=document.getElementById('after-img');
+  // after-img: Unsplash 실제 패션 사진 비동기 로딩
+  const afterEl = document.getElementById('after-img');
+  const afterWrap = afterEl.parentElement;
   afterEl.style.display='none';
-  const afterWrap=afterEl.parentElement;
-  if(!afterWrap.querySelector('.css-after-card')){
-    const div=document.createElement('div');
-    div.className='css-after-card';
-    div.style.cssText=`width:100%;height:100%;background:${afterGrad};display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;`;
-    div.innerHTML=`<div style="font-size:72px;margin-bottom:16px;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.4))">${afterEmo}</div><div style="color:#fff;font-size:14px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${afterLbl}</div>`;
-    afterWrap.appendChild(div);
-  }
-  afterImgUrl='';
+  // 기존 카드 제거
+  const oldCard = afterWrap.querySelector('.unsplash-after-card');
+  if(oldCard) oldCard.remove();
+  const afterDiv = document.createElement('div');
+  afterDiv.className = 'unsplash-after-card';
+  afterDiv.style.cssText = 'width:100%;height:100%;background:linear-gradient(145deg,#d0d8e8,#b8c4d8);display:flex;align-items:center;justify-content:center;border-radius:16px;font-size:32px;';
+  afterDiv.textContent = '⏳';
+  afterWrap.appendChild(afterDiv);
+  const afterQuery = oq ? oq[0] : (curGender==='male'?'men elegant suit':'women elegant fashion');
+  const cat = getCatKey(afterQuery);
+  const gender = curGender==='male'?'male':'female';
+  const queries = UNSPLASH_QUERY[gender][cat]||UNSPLASH_QUERY[gender].classic;
+  fetchUnsplashImg(queries[0], 3).then(url => {
+    if(url){
+      afterImgUrl = url;
+      afterDiv.style.cssText = 'width:100%;height:100%;border-radius:16px;overflow:hidden;cursor:pointer;';
+      afterDiv.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;" onclick="openLightbox('${url}')"/>`;
+      const lbl = document.getElementById('after-label');
+      if(lbl) lbl.textContent = si.name;
+    } else {
+      afterImgUrl='';
+    }
+  });
   document.getElementById('after-label').textContent=si.name;
 
-  let afterHtml='';
+  // 변신 후 스타일 룩: Unsplash 실제 패션 사진 비동기 로딩
+  const afterImgsEl = document.getElementById('after-imgs');
+  afterImgsEl.innerHTML = '';
   (oq||[]).slice(0,4).forEach((q,i)=>{
-    const [grad,emo,label]=getCardData(q,i+20);
-    const itemLabel=clothes[i]||label;
-    afterHtml+=`<div class="outfit-img-wrap" style="background:${grad};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;"><div style="font-size:48px;margin-bottom:10px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))">${emo}</div><div style="color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 8px;text-shadow:0 1px 4px rgba(0,0,0,0.5)">${label}</div><div class="outfit-label">${itemLabel}</div></div>`;
+    const card = makeOutfitCard(q, i+20, clothes[i]||q, afterImgsEl, i);
+    afterImgsEl.appendChild(card);
   });
-  document.getElementById('after-imgs').innerHTML=afterHtml;
 }
 function switchTab(tabId,btn){
   ['t-result','t-recommend','t-daily','t-before'].forEach(t=>{document.getElementById(t).style.display='none';});
