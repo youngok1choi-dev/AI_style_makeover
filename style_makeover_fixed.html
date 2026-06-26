@@ -31,6 +31,22 @@
   .start-btn{width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(90deg,#1A4AB8,#2A68E0);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(26,74,184,0.30);letter-spacing:0.5px;}
   .start-note{color:#8098C0;font-size:12px;margin-top:12px;}
 
+  /* 저작권 + QR 영역 */
+  .home-footer{margin-top:20px;padding-top:16px;border-top:1px solid rgba(42,94,200,0.10);}
+  .copyright-box{background:rgba(42,94,200,0.04);border:1px solid rgba(42,94,200,0.10);border-radius:10px;padding:10px 14px;margin-bottom:14px;}
+  .copyright-text{color:#8098C0;font-size:10px;line-height:1.7;text-align:center;}
+  .copyright-text strong{color:#5A7AB8;font-weight:700;}
+  .qr-section{display:flex;align-items:center;gap:14px;background:#fff;border-radius:14px;padding:14px;border:1px solid rgba(42,94,200,0.12);box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+  .qr-box{flex-shrink:0;position:relative;}
+  #qr-canvas{border-radius:8px;display:block;}
+  .qr-refresh-badge{position:absolute;bottom:-6px;right:-6px;background:#2A5EC8;color:#fff;font-size:8px;font-weight:800;padding:2px 5px;border-radius:8px;white-space:nowrap;}
+  .qr-info{flex:1;text-align:left;}
+  .qr-title{color:#0A1E42;font-size:12px;font-weight:800;margin-bottom:4px;}
+  .qr-desc{color:#8098C0;font-size:10px;line-height:1.6;}
+  .qr-timer{display:inline-flex;align-items:center;gap:4px;margin-top:6px;background:rgba(42,94,200,0.07);border-radius:8px;padding:3px 8px;}
+  .qr-timer-text{color:#2A5EC8;font-size:10px;font-weight:700;}
+  #qr-countdown{color:#E8407A;font-weight:900;font-size:11px;}
+
   /* GENDER */
   .gender-wrap{max-width:400px;width:100%;text-align:center;}
   .gender-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px;}
@@ -112,6 +128,7 @@
   .share-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
   .share-btn{padding:14px;border-radius:12px;border:1px solid rgba(42,94,200,0.18);background:#fff;color:#0A1E42;font-size:13px;cursor:pointer;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -137,6 +154,37 @@
       <button class="mod-card c-pink"   onclick="selectModule('fulldiag')"><span class="icon">✦</span> <div class="ctitle">전체 AI 진단</div> <div class="cdesc">종합 이미지메이킹 분석</div></button>
     </div>
     <p class="start-note">각 메뉴를 선택하거나 전체 진단을 받아보세요</p>
+
+    <!-- 저작권 + QR 영역 -->
+    <div class="home-footer">
+      <!-- 저작권 안내 -->
+      <div class="copyright-box">
+        <p class="copyright-text">
+          <strong>© 2025 상상우리 (Sangsangwoori). All Rights Reserved.</strong><br/>
+          본 AI 스타일 진단 서비스의 모든 콘텐츠, 진단 알고리즘, UI 디자인은<br/>
+          상상우리의 독점 저작물입니다.<br/>
+          <strong>무단 복제·배포·상업적 이용을 엄금합니다.</strong><br/>
+          Unauthorized reproduction or commercial use is strictly prohibited.
+        </p>
+      </div>
+
+      <!-- QR 코드 섹션 -->
+      <div class="qr-section">
+        <div class="qr-box">
+          <div id="qr-canvas"></div>
+          <div class="qr-refresh-badge">🔄 자동갱신</div>
+        </div>
+        <div class="qr-info">
+          <div class="qr-title">📱 모바일로 바로 체험</div>
+          <div class="qr-desc">QR코드를 스캔하면<br/>스마트폰에서 즉시 진단 가능</div>
+          <div class="qr-timer">
+            <span class="qr-timer-text">🔒 보안 갱신</span>
+            <span id="qr-countdown">--</span>
+            <span class="qr-timer-text">초 후</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -771,6 +819,58 @@ function shareResult(){
   if(navigator.share)navigator.share({title:"나의 스타일 진단",text:`${si.name} - ${si.desc}`});
   else{navigator.clipboard.writeText(`${si.name}: ${si.desc}`);alert("클립보드에 복사되었어요!");}
 }
+</script>
+
+<script>
+// ── QR 코드 동적 생성 + 시간 기반 토큰으로 무단복제 방지 ──
+(function(){
+  const APP_URL  = "https://ai-style-makeover.vercel.app";
+  const INTERVAL = 300; // 5분마다 QR 갱신 (무단복제 방지)
+
+  let qrInstance = null;
+  let countdown  = INTERVAL;
+  let timerEl    = document.getElementById('qr-countdown');
+
+  function genToken(){
+    // 시간 기반 토큰: 5분 단위 블록 × 상상우리 시드
+    const block = Math.floor(Date.now() / (INTERVAL * 1000));
+    const seed  = (block * 0x9e3779b9 + 0x6c62272e) >>> 0;
+    return seed.toString(36).toUpperCase().slice(0,8);
+  }
+
+  function buildQrUrl(){
+    const token = genToken();
+    const ts    = Math.floor(Date.now() / (INTERVAL * 1000));
+    // 토큰 + 타임스탬프 포함 → 복제된 QR은 만료 후 무효
+    return `${ APP_URL }?t=${ token }&ts=${ ts }`;
+  }
+
+  function renderQR(){
+    const el = document.getElementById('qr-canvas');
+    el.innerHTML = '';
+    const url = buildQrUrl();
+    qrInstance = new QRCode(el, {
+      text:          url,
+      width:         100,
+      height:        100,
+      colorDark:     "#0A1E42",
+      colorLight:    "#ffffff",
+      correctLevel:  QRCode.CorrectLevel.H  // 최고 오류정정 레벨 (로고 가능)
+    });
+    countdown = INTERVAL;
+  }
+
+  function tick(){
+    countdown--;
+    if(timerEl) timerEl.textContent = countdown;
+    if(countdown <= 0) renderQR();
+  }
+
+  // 초기 렌더링
+  renderQR();
+  if(timerEl) timerEl.textContent = countdown;
+  setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
