@@ -387,85 +387,165 @@ let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComme
 // ── 의상 이미지: GitHub raw SVG 일러스트 (100% 작동 보장) ──
 const RAW_BASE = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images";
 
-// ── 실제 패션 모델 착장 사진 (GitHub raw CDN, CC0 라이선스) ──
-// ── 실제 의류 실착 사진 (CC0 공개 데이터셋 - GitHub raw CDN) ──
-// 출처: CatVTON (Zheng-Chong), VITON-HD (yisol/IDM-VTON)
-// 라이선스: MIT / Apache 2.0 공개 연구 데이터셋
+// ══════════════════════════════════════════════════════
+// 🛍️  실제 패션 이미지 API 연동 (Pixabay + Unsplash)
+//      Pixabay: 500req/day 무료, CORS 허용, 상업적 사용 가능
+//      Unsplash: 50req/hr 무료, CORS 허용, 크레딧 표시 필요
+// ══════════════════════════════════════════════════════
 
-const P = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";  // GitHub raw base URL
+const PIXABAY_KEY  = "47546971-8e4882a5e9f0a76e7da9a79c2";
+const UNSPLASH_KEY = "8Kd_AfkS4AlNlgJs8VRn9qdxdL-JE2q6GxiS1jQFqiA";
 
-// ─── 여성 스타일별 실착 모델 사진 ───
-const FEMALE_STYLE = {
-  classic:  [`${P}/f_classic.jpg`,  `${P}/f_extra2.jpg`, `${P}/f_extra3.jpg`],
-  formal:   [`${P}/f_formal.jpg`,   `${P}/f_extra4.jpg`, `${P}/f_extra1.jpg`],
-  chic:     [`${P}/f_chic.png`,     `${P}/f_extra5.jpg`, `${P}/f_extra6.jpeg`],
-  feminine: [`${P}/f_feminine.png`, `${P}/f_extra2.jpg`, `${P}/f_extra3.jpg`],
-  natural:  [`${P}/f_natural.png`,  `${P}/f_extra1.jpg`, `${P}/f_extra4.jpg`],
+// ─── 스타일 × 성별 → Pixabay 검색어 ───
+const PIXABAY_QUERIES = {
+  female: {
+    classic:  ["women blazer suit elegant","women classic coat fashion","women formal blazer"],
+    formal:   ["women business suit office","women power suit professional","women work outfit elegant"],
+    chic:     ["women minimalist fashion chic","women silk blouse chic","women turtleneck minimal"],
+    feminine: ["women midi dress floral","women dress elegant feminine","women lace dress fashion"],
+    natural:  ["women linen casual outfit","women boho fashion natural","women earth tone casual"],
+  },
+  male: {
+    classic:  ["men suit classic fashion","men formal suit elegant","men navy blazer suit"],
+    business: ["men business suit professional","men office suit formal","men power suit"],
+    street:   ["men street style fashion","men casual urban outfit","men hoodie street"],
+    smart:    ["men smart casual fashion","men chino blazer","men business casual outfit"],
+    natural:  ["men linen casual fashion","men earth tone outfit","men relaxed casual style"],
+  }
 };
 
-// ─── 남성 스타일별 실착 모델 사진 ───
-const MALE_STYLE = {
-  classic:  [`${P}/m_classic.png`,  `${P}/m_smart.png`,    `${P}/m_business.png`],
-  business: [`${P}/m_business.png`, `${P}/m_classic.png`,  `${P}/m_smart.png`],
-  street:   [`${P}/m_street.png`,   `${P}/m_smart.png`,    `${P}/m_classic.png`],
-  smart:    [`${P}/m_smart.png`,    `${P}/m_business.png`, `${P}/m_street.png`],
-  natural:  [`${P}/m_street.png`,   `${P}/m_classic.png`,  `${P}/m_smart.png`],
-};
+// ─── 이미지 캐시 (중복 API 호출 방지) ───
+const imgCache = {};
+const imgCacheBySlot = {};  // 슬롯별 캐시 (같은 위치에 다른 이미지)
 
-// 의류 단품 풀 (추천 의상 카드 배경용)
-const CLOTH_POOL = [
-  `${P}/ic_01.jpg`, `${P}/ic_02.jpg`, `${P}/ic_03.jpg`,
-  `${P}/ic_04.jpg`, `${P}/ic_05.jpg`,
-  `${P}/co_01.jpg`, `${P}/co_02.jpg`, `${P}/co_03.jpg`, `${P}/co_04.jpg`,
-  `${P}/cu_01.jpg`, `${P}/cu_02.jpg`, `${P}/cu_03.jpg`, `${P}/cu_04.jpg`,
-];
+// ─── Pixabay API 호출 ───
+async function fetchPixabay(query, page=1){
+  const key = `${query}_p${page}`;
+  if(imgCache[key]) return imgCache[key];
+  try {
+    const url = `https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${encodeURIComponent(query)}&image_type=photo&per_page=10&page=${page}&safesearch=true&orientation=vertical&category=fashion`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const hits = d.hits||[];
+    if(hits.length > 0){
+      // 해상도 높은 이미지 선택
+      const pool = hits.map(h => h.webformatURL || h.largeImageURL);
+      imgCache[key] = pool;
+      return pool;
+    }
+  } catch(e){ console.warn('Pixabay error:', e); }
+  return [];
+}
 
+// ─── Unsplash API 호출 (폴백용) ───
+async function fetchUnsplash(query, page=1){
+  const key = `unsplash_${query}_${page}`;
+  if(imgCache[key]) return imgCache[key];
+  try {
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=10&page=${page}&orientation=portrait&client_id=${UNSPLASH_KEY}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const results = d.results||[];
+    if(results.length > 0){
+      const pool = results.map(p => p.urls.regular + '&w=600&h=800&fit=crop&crop=faces,center');
+      imgCache[key] = pool;
+      return pool;
+    }
+  } catch(e){ console.warn('Unsplash error:', e); }
+  return [];
+}
+
+// ─── 스타일에 맞는 검색어 선택 ───
 function getCatKey(q){
   q = q.toLowerCase();
-  if(curGender === 'male'){
-    if(q.includes('classic')||q.includes('navy suit')||q.includes('tweed')||q.includes('camel coat')) return 'classic';
+  if(curGender==='male'){
+    if(q.includes('classic')||q.includes('navy suit')||q.includes('tweed')) return 'classic';
     if(q.includes('business')||q.includes('professional')||q.includes('formal')) return 'business';
-    if(q.includes('street')||q.includes('urban')) return 'street';
+    if(q.includes('street')||q.includes('urban')||q.includes('casual cool')) return 'street';
     if(q.includes('smart')||q.includes('polo')||q.includes('chino')) return 'smart';
     return 'natural';
   } else {
-    if(q.includes('wool coat')||q.includes('tweed')||q.includes('blazer')||q.includes('turtleneck')) return 'classic';
+    if(q.includes('blazer')||q.includes('wool coat')||q.includes('tweed')||q.includes('turtleneck')) return 'classic';
     if(q.includes('formal')||q.includes('suit')||q.includes('power')||q.includes('office')) return 'formal';
-    if(q.includes('chic')||q.includes('minimalist')||q.includes('silk')) return 'chic';
+    if(q.includes('chic')||q.includes('minimalist')||q.includes('silk')||q.includes('sleek')) return 'chic';
     if(q.includes('dress')||q.includes('feminine')||q.includes('floral')||q.includes('rose')) return 'feminine';
     return 'natural';
   }
 }
 
-function getFashionImg(q, i=0){
+// ─── 의상 카드 생성 (비동기 이미지 로딩) ───
+function makeOutfitCard(q, slotIdx, label){
   const cat = getCatKey(q);
-  const pool = curGender === 'male'
-    ? (MALE_STYLE[cat]  || MALE_STYLE.classic)
-    : (FEMALE_STYLE[cat]|| FEMALE_STYLE.classic);
-  return pool[Math.abs(i) % pool.length];
-}
+  const gender = curGender==='male' ? 'male' : 'female';
+  const queries = PIXABAY_QUERIES[gender][cat] || PIXABAY_QUERIES[gender].classic;
+  const searchQuery = queries[slotIdx % queries.length];
+  const page = Math.floor(slotIdx / queries.length) + 1;
 
-// 의상 카드: 실착 모델 사진 풀스크린
-function makeOutfitCard(q, i, label){
-  const imgSrc = getFashionImg(q, i);
   const div = document.createElement('div');
   div.className = 'outfit-img-wrap';
-  div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:#e8f0ff;';
-  div.onclick = () => openLightbox(imgSrc);
+  div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:linear-gradient(135deg,#e8f0ff,#d0dcf4);';
+
+  // 로딩 플레이스홀더
   div.innerHTML = `
-    <img src="${imgSrc}"
-      style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform 0.3s;"
-      onmouseover="this.style.transform='scale(1.04)'"
-      onmouseout="this.style.transform='scale(1)'"
-      alt="${label}"
-      onerror="this.parentElement.innerHTML='<div style=\'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:linear-gradient(145deg,#2A5EC8,#1a3d8f);color:white;gap:8px;\'><span style=\'font-size:40px;\'>👗</span><span style=\'font-size:12px;font-weight:700;\'>${label}</span></div><div class=\"outfit-label\">${label}</div>'"/>
-    <div class="outfit-label">${label}</div>
-    <div class="zoom-badge">🔍</div>`;
+    <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+      <div style="width:36px;height:36px;border:3px solid #2A5EC8;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span style="color:#2A5EC8;font-size:11px;font-weight:600;">스타일 로딩중...</span>
+    </div>`;
+
+  // 비동기 이미지 로딩
+  (async ()=>{
+    let imgUrl = null;
+
+    // 1차: Pixabay
+    const pixImgs = await fetchPixabay(searchQuery, page);
+    if(pixImgs.length > 0){
+      imgUrl = pixImgs[slotIdx % pixImgs.length];
+    }
+
+    // 2차 폴백: Unsplash
+    if(!imgUrl){
+      const unImgs = await fetchUnsplash(searchQuery, page);
+      if(unImgs.length > 0) imgUrl = unImgs[slotIdx % unImgs.length];
+    }
+
+    if(imgUrl){
+      div.onclick = () => openLightbox(imgUrl);
+      div.innerHTML = `
+        <img src="${imgUrl}"
+          style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform 0.4s ease;"
+          alt="${label}"
+          onmouseover="this.style.transform='scale(1.05)'"
+          onmouseout="this.style.transform='scale(1)'"
+          onerror="this.parentElement.innerHTML=fallbackCard('${label}')"/>
+        <div class="outfit-label">${label}</div>
+        <div class="zoom-badge">🔍</div>
+        <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.5);color:white;font-size:9px;padding:2px 6px;border-radius:10px;backdrop-filter:blur(4px);">📷 Pixabay</div>`;
+    } else {
+      div.innerHTML = fallbackCard(label);
+    }
+  })();
+
   return div;
 }
 
-function imgUrl(q, i=0){ return getFashionImg(q, i); }
-function getCardData(q, i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
+// ─── 폴백 카드 HTML ───
+function fallbackCard(label){
+  return `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#2A5EC8,#1a3d8f);color:white;gap:8px;">
+    <span style="font-size:44px;">👗</span>
+    <span style="font-size:12px;font-weight:700;text-align:center;padding:0 12px;">${label}</span>
+  </div><div class="outfit-label">${label}</div>`;
+}
+
+// ─── spin 애니메이션 CSS 주입 ───
+if(!document.getElementById('spin-style')){
+  const st = document.createElement('style');
+  st.id = 'spin-style';
+  st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(st);
+}
+
+function imgUrl(q,i=0){ return ''; }
+function getCardData(q,i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
   document.getElementById('page-result').style.display='none';
@@ -636,16 +716,29 @@ function buildResult(){
   });
   document.getElementById('daily-rows').innerHTML=dailyHtml;
 
-  // After img
-  // after-img: SVG 패션 일러스트
+  // After img: Pixabay 실제 패션 사진
   const afterQuery = oq ? oq[0] : (curGender==='male'?'men classic suit':'women elegant coat');
-  afterImgUrl = getFashionImg(afterQuery, 0);
   const afterEl = document.getElementById('after-img');
-  afterEl.src = afterImgUrl;
+  const afterCat = getCatKey(afterQuery);
+  const afterGender = curGender==='male'?'male':'female';
+  const afterQueries = PIXABAY_QUERIES[afterGender][afterCat]||PIXABAY_QUERIES[afterGender].classic;
   afterEl.style.display = 'block';
-  afterEl.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:16px;cursor:pointer;';
-  afterEl.onclick = () => openLightbox(afterImgUrl);
+  afterEl.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top;border-radius:16px;cursor:pointer;background:#e8f0ff;';
+  afterEl.src = '';
+  afterEl.alt = si.name;
   document.getElementById('after-label').textContent=si.name;
+  // 비동기 로딩
+  (async ()=>{
+    const imgs = await fetchPixabay(afterQueries[0], 2);
+    if(imgs.length > 0){
+      afterImgUrl = imgs[1] || imgs[0];
+      afterEl.src = afterImgUrl;
+      afterEl.onclick = () => openLightbox(afterImgUrl);
+    } else {
+      const uImgs = await fetchUnsplash(afterQueries[0], 1);
+      if(uImgs.length > 0){ afterImgUrl = uImgs[0]; afterEl.src = afterImgUrl; afterEl.onclick=()=>openLightbox(afterImgUrl); }
+    }
+  })();
 
   // 변신 후 스타일 룩: SVG 패션 일러스트
   const afterImgsEl = document.getElementById('after-imgs');
