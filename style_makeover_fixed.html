@@ -7,17 +7,19 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#E8F0FC;min-height:100vh;}
-  .page{display:none;min-height:100vh;}
-  .page.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;}
-  .page.active:not(#page-home){padding:24px;}
+  .page{display:none;}
+  /* 홈 페이지: 전체 화면 flex */
+  #page-home{display:none;flex-direction:column;background:#E8F0FC;min-height:100vh;overflow-y:auto;}
+  #page-home.active{display:flex;}
+  /* 나머지 페이지: 중앙 정렬 */
+  .page.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;min-height:100vh;}
+  #page-home.active{padding:0;align-items:stretch;justify-content:flex-start;}
 
   /* HOME – 한 화면 완성형 반응형 레이아웃 */
-  .page.active{padding:0;}
-  #page-home{background:#E8F0FC;overflow-y:auto;}
   .home-wrap{
     max-width:420px;width:100%;margin:0 auto;
     display:flex;flex-direction:column;
-    min-height:100vh;
+    flex:1;
     padding:clamp(10px,3vw,20px) clamp(12px,4vw,20px);
     box-sizing:border-box;
   }
