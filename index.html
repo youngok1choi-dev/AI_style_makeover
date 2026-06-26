@@ -498,7 +498,7 @@ async function fetchAI(){
   const stl=curGender==='male'?stlM:stlF;
   const gLabel=curGender==='male'?"중장년 남성(40~60대)":"중장년 여성(40~60대)";
   try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다.\n고객 특성을 바탕으로 따뜻하고 전문적으로 3~4문장의 퍼스널 스타일 코멘트를 한국어로 작성해주세요.\n\n피부톤: ${sl[answers.skin]||""}\n얼굴형: ${fl[answers.face]||""}\n체형: ${bl[answers.body]||""}\n키: ${hl[answers.height]||""}\n선호 스타일: ${stl[answers.style]||""}\n\n성숙한 아름다움과 품격을 살리는 구체적 스타일 포인트를 격려와 함께 담아주세요.`}]})});
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다.\n고객 특성을 바탕으로 따뜻하고 전문적으로 3~4문장의 퍼스널 스타일 코멘트를 한국어로 작성해주세요.\n\n피부톤: ${sl[answers.skin]||""}\n얼굴형: ${fl[answers.face]||""}\n체형: ${bl[answers.body]||""}\n키: ${hl[answers.height]||""}\n선호 스타일: ${stl[answers.style]||""}\n\n성숙한 아름다움과 품격을 살리는 구체적 스타일 포인트를 격려와 함께 담아주세요.`}]})});
     const d=await res.json();return d.content?.[0]?.text||"당신만의 스타일을 찾아드릴게요!";
   }catch{return "성숙하고 세련된 스타일로 새롭게 변신해보세요!";}
 }
