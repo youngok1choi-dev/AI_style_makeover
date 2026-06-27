@@ -353,10 +353,21 @@
 
 <!-- LOADING -->
 <div id="page-loading" class="page">
-  <div style="text-align:center;">
+  <div style="text-align:center;padding:20px;">
     <div style="width:56px;height:56px;border:4px solid rgba(42,94,200,0.15);border-top:4px solid #2A5EC8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
-    <p style="color:#0A1E42;font-size:18px;font-weight:700;">AI가 분석 중이에요</p>
-    <p style="color:#8098C0;font-size:13px;margin-top:8px;">퍼스널 컬러와 체형을 정밀 분석 중...</p>
+    <p style="color:#0A1E42;font-size:18px;font-weight:700;">스타일 분석 중...</p>
+    <p style="color:#8098C0;font-size:13px;margin-top:8px;" id="loading-msg">퍼스널 컬러와 체형을 분석하고 있어요</p>
+    <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px;max-width:260px;margin-left:auto;margin-right:auto;">
+      <div id="load-step1" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8098C0;">
+        <span id="s1-icon">⏳</span> 스타일 타입 분석 중...
+      </div>
+      <div id="load-step2" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8098C0;">
+        <span id="s2-icon">⏳</span> AI 코멘트 생성 중...
+      </div>
+      <div id="load-step3" style="display:flex;align-items:center;gap:8px;font-size:12px;color:#8098C0;">
+        <span id="s3-icon">⏳</span> 코디 추천 준비 중...
+      </div>
+    </div>
   </div>
 </div>
 
@@ -947,23 +958,67 @@ function handlePhoto2(e){
 }
 async function finalize(){
   showPage('page-loading');
-  aiComment=await fetchAI();
+  // 로딩 스텝 UI 업데이트
+  const setStep = (n, done) => {
+    const el = document.getElementById(`s${n}-icon`);
+    if(el) el.textContent = done ? '✅' : '⏳';
+  };
+  setTimeout(()=>setStep(1,true), 300);
+  setTimeout(()=>setStep(2,false), 300);
+  // ① 로컬 코멘트 즉시 생성 (API 없이 항상 작동)
+  aiComment = buildLocalComment();
+  // ② Claude API 시도 (8초 timeout, 실패해도 무관)
+  try {
+    const apiResult = await Promise.race([
+      fetchAI(),
+      new Promise((_,rej)=>setTimeout(()=>rej('timeout'),8000))
+    ]);
+    if(apiResult) aiComment = apiResult;
+  } catch(e){ /* 로컬 코멘트 사용 */ }
+  setStep(2,true); setStep(3,false);
+  await new Promise(r=>setTimeout(r,200));
   buildResult();
+  setStep(3,true);
   showPage('page-result');
 }
+
+// 로컬 스타일 코멘트 (API 없이 즉시 생성)
+function buildLocalComment(){
+  const {skin,face,body,style}=answers;
+  const g=curGender==='male';
+  const skinTxt={cool:'쿨톤의 맑고 청명한 피부빛',warm:'웜톤의 따뜻하고 생동감 넘치는 피부빛',neutral:'뉴트럴톤의 균형 잡힌 피부빛',dark:'딥톤의 깊고 풍부한 피부빛'};
+  const stTxt=g
+    ?{classic:'클래식한 품격',business:'비즈니스 세련미',street:'트렌디한 스트리트',smart:'스마트한 캐주얼',natural:'자연스러운 여유'}
+    :{classic:'클래식한 우아함',formal:'포멀한 전문성',chic:'시크한 도시미',feminine:'페미닌한 여성미',natural:'내추럴한 편안함'};
+  const bodyTxt=g
+    ?{slim:'레이어드 코디로 볼륨감을 살리면',normal:'다양한 실루엣을 자유롭게 소화하는 체형으로',chubby:'다크톤과 수직 라인으로 슬림하게',plus:'모노톤과 구조적 실루엣으로 자신감 있게'}
+    :{slim:'볼륨감 있는 레이어드로',normal:'다양한 스타일을 자유롭게 소화하는 체형으로',chubby:'세로 라인과 V넥으로 슬림하게',plus:'A라인과 모노톤으로 우아하게'};
+  const s=skinTxt[skin]||'아름다운 피부빛';
+  const st=stTxt[style]||'세련된 스타일';
+  const b=bodyTxt[body]||'멋지게';
+  return `${s}을 가진 당신에게 ${st}이 잘 어울립니다. ${b} 연출하면 성숙하고 품격 있는 매력을 한층 돋보이게 할 수 있어요. 자신만의 색깔로 자신감 있게 스타일링해보세요! ✨`;
+}
+
 async function fetchAI(){
   const sl={cool:"쿨톤",warm:"웜톤",neutral:"뉴트럴톤",dark:"딥톤"};
   const fl={oval:"갸름한형",round:"둥근형",square:"각진형",long:"긴형"};
   const bl={slim:"슬림",normal:"보통",chubby:"통통",plus:"풍만/빅"};
   const hl={short:"페티트",medium:"미디엄",tall:"톨"};
-  const stlF={classic:"클래식",formal:"포멀·정장",chic:"시크·모던",feminine:"페미닌",natural:"내추럴"};
+  const stlF={classic:"클래식",formal:"포멀",chic:"시크·모던",feminine:"페미닌",natural:"내추럴"};
   const stlM={classic:"클래식",business:"비즈니스",street:"스트리트",smart:"스마트캐주얼",natural:"내추럴"};
   const stl=curGender==='male'?stlM:stlF;
   const gLabel=curGender==='male'?"중장년 남성(40~60대)":"중장년 여성(40~60대)";
-  try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다.\n고객 특성을 바탕으로 따뜻하고 전문적으로 3~4문장의 퍼스널 스타일 코멘트를 한국어로 작성해주세요.\n\n피부톤: ${sl[answers.skin]||""}\n얼굴형: ${fl[answers.face]||""}\n체형: ${bl[answers.body]||""}\n키: ${hl[answers.height]||""}\n선호 스타일: ${stl[answers.style]||""}\n\n성숙한 아름다움과 품격을 살리는 구체적 스타일 포인트를 격려와 함께 담아주세요.`}]})});
-    const d=await res.json();return d.content?.[0]?.text||"당신만의 스타일을 찾아드릴게요!";
-  }catch{return "성숙하고 세련된 스타일로 새롭게 변신해보세요!";}
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",max_tokens:400,
+      messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다. 2~3문장으로 퍼스널 스타일 코멘트를 한국어로 작성해주세요.
+피부톤:${sl[answers.skin]||""} 얼굴형:${fl[answers.face]||""} 체형:${bl[answers.body]||""} 키:${hl[answers.height]||""} 선호스타일:${stl[answers.style]||""}`}]
+    })
+  });
+  const d=await res.json();
+  return d.content?.[0]?.text||null;
 }
 function buildResult(){
   const {skin,face,body,height,style}=answers;
