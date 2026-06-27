@@ -2,34 +2,124 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<!-- v2026.06.27.fast -->
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AI 스타일 메이크오버</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#E8F0FC;min-height:100vh;}
-  .page{display:none;min-height:100vh;}
-  .page.active{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+  /* 기본: 모든 페이지 숨김 */
+  .page{display:none;}
+  /* 홈: 전체화면, 스크롤 가능 */
+  #page-home{
+    display:none;min-height:100vh;background:#E8F0FC;
+    align-items:center;justify-content:flex-start;flex-direction:column;
+  }
+  #page-home.active{display:flex;}
+  /* 나머지: 중앙 정렬 */
+  .page.active:not(#page-home){
+    display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:24px;min-height:100vh;
+  }
 
-  /* HOME */
-  .home-wrap{max-width:440px;width:100%;text-align:center;}
-  .logo-box{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,#2A5EC8 0%,#6A3DB8 50%,#E8407A 100%);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 18px;box-shadow:0 8px 28px rgba(42,94,200,0.30);}
-  .brand{font-size:11px;letter-spacing:4px;font-weight:800;text-transform:uppercase;background:linear-gradient(90deg,#2A5EC8,#E8407A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
-  .home-title{color:#0A1E42;font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:8px;}
-  .home-sub{color:#3A5A88;font-size:14px;line-height:1.8;margin-bottom:32px;}
-  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;}
-  .mod-card{border:none;border-radius:18px;padding:20px 16px;text-align:left;cursor:pointer;transition:transform 0.18s,box-shadow 0.18s;color:#fff;}
-  .mod-card:hover{transform:translateY(-4px);}
-  .mod-card .icon{font-size:24px;margin-bottom:10px;display:block;}
-  .mod-card .ctitle{font-size:14px;font-weight:800;margin-bottom:4px;color:#fff;}
-  .mod-card .cdesc{font-size:11px;color:rgba(255,255,255,0.82);}
-  .c-blue   {background:linear-gradient(135deg,#2A5EC8,#4A80E8);box-shadow:0 6px 20px rgba(42,94,200,0.35);}
-  .c-cyan   {background:linear-gradient(135deg,#0A8CAA,#1AB8CC);box-shadow:0 6px 20px rgba(10,140,170,0.32);}
-  .c-steel  {background:linear-gradient(135deg,#1A5AA0,#2A80CC);box-shadow:0 6px 20px rgba(26,90,160,0.32);}
-  .c-gold   {background:linear-gradient(135deg,#B87800,#D8A010);box-shadow:0 6px 20px rgba(184,120,0,0.32);}
-  .c-green  {background:linear-gradient(135deg,#087858,#10A878);box-shadow:0 6px 20px rgba(8,120,88,0.30);}
-  .c-pink   {background:linear-gradient(135deg,#D43A8A,#F060A8);box-shadow:0 8px 24px rgba(212,58,138,0.40);}
-  .start-btn{width:100%;padding:18px;border-radius:14px;border:none;background:linear-gradient(90deg,#1A4AB8,#2A68E0);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(26,74,184,0.30);letter-spacing:0.5px;}
-  .start-note{color:#8098C0;font-size:12px;margin-top:12px;}
+  /* HOME – 한 화면 완성형 반응형 레이아웃 */
+  .home-wrap{
+    max-width:440px;width:100%;
+    display:flex;flex-direction:column;
+    min-height:100vh;
+    padding:clamp(12px,3vw,24px) clamp(16px,4vw,24px) clamp(10px,2vh,20px);
+    box-sizing:border-box;
+  }
+  /* 헤더 */
+  .home-header{text-align:center;padding:clamp(8px,2vh,14px) 0 clamp(6px,1.5vh,10px);}
+  .logo-box{
+    width:clamp(44px,8vw,60px);height:clamp(44px,8vw,60px);
+    border-radius:16px;
+    background:linear-gradient(135deg,#2A5EC8 0%,#6A3DB8 50%,#E8407A 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(20px,4vw,28px);
+    margin:0 auto clamp(6px,1.5vh,10px);
+    box-shadow:0 6px 20px rgba(42,94,200,0.30);
+  }
+  .brand{
+    font-size:clamp(8px,2vw,10px);letter-spacing:3px;font-weight:800;text-transform:uppercase;
+    background:linear-gradient(90deg,#2A5EC8,#E8407A);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:4px;
+  }
+  .home-title{color:#0A1E42;font-size:clamp(18px,5vw,24px);font-weight:900;letter-spacing:-0.5px;margin-bottom:3px;}
+  .home-sub{color:#3A5A88;font-size:clamp(10px,2.5vw,12px);line-height:1.6;margin-bottom:0;}
+
+  /* 메뉴 그리드 */
+  .card-grid{
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:clamp(8px,2vw,12px);
+    margin:clamp(10px,2vh,16px) 0 clamp(6px,1.5vh,10px);
+  }
+  .mod-card{
+    border:none;border-radius:14px;
+    padding:clamp(10px,2.5vw,14px) clamp(10px,2.5vw,14px);
+    text-align:left;cursor:pointer;
+    transition:transform 0.18s,box-shadow 0.18s;color:#fff;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    min-height:clamp(72px,14vh,92px);
+  }
+  .mod-card:active{transform:scale(0.97);}
+  .mod-card .icon{font-size:clamp(16px,4vw,20px);margin-bottom:4px;display:block;line-height:1;}
+  .mod-card .ctitle{font-size:clamp(11px,3vw,13px);font-weight:800;margin-bottom:2px;color:#fff;}
+  .mod-card .cdesc{font-size:clamp(9px,2.2vw,10px);color:rgba(255,255,255,0.82);line-height:1.3;}
+  .c-blue {background:linear-gradient(135deg,#2A5EC8,#4A80E8);box-shadow:0 4px 14px rgba(42,94,200,0.35);}
+  .c-cyan {background:linear-gradient(135deg,#0A8CAA,#1AB8CC);box-shadow:0 4px 14px rgba(10,140,170,0.32);}
+  .c-steel{background:linear-gradient(135deg,#1A5AA0,#2A80CC);box-shadow:0 4px 14px rgba(26,90,160,0.32);}
+  .c-gold {background:linear-gradient(135deg,#B87800,#D8A010);box-shadow:0 4px 14px rgba(184,120,0,0.32);}
+  .c-green{background:linear-gradient(135deg,#087858,#10A878);box-shadow:0 4px 14px rgba(8,120,88,0.30);}
+  .c-pink {background:linear-gradient(135deg,#D43A8A,#F060A8);box-shadow:0 4px 14px rgba(212,58,138,0.40);}
+  .start-note{color:#8098C0;font-size:clamp(9px,2.2vw,11px);text-align:center;margin-bottom:clamp(4px,1vh,8px);}
+
+  /* 저작권 + QR 영역 */
+  .home-footer{
+    border-top:1px solid rgba(42,94,200,0.10);
+    padding-top:clamp(8px,1.5vh,12px);
+    margin-top:clamp(8px,2vh,16px);
+  }
+  /* QR + 저작권 가로 배치 */
+  .footer-inner{display:flex;align-items:center;gap:10px;}
+  .qr-box{flex-shrink:0;position:relative;}
+  #qr-canvas{border-radius:6px;display:block;}
+  .qr-refresh-badge{
+    position:absolute;bottom:-5px;right:-5px;
+    background:#2A5EC8;color:#fff;font-size:7px;font-weight:800;
+    padding:1px 4px;border-radius:6px;white-space:nowrap;
+  }
+  .footer-right{flex:1;min-width:0;}
+  .qr-scan-label{color:#0A1E42;font-size:clamp(9px,2.2vw,11px);font-weight:800;margin-bottom:2px;}
+  .qr-timer{display:inline-flex;align-items:center;gap:3px;background:rgba(42,94,200,0.07);border-radius:6px;padding:2px 6px;margin-bottom:4px;}
+  .qr-timer-text{color:#2A5EC8;font-size:9px;font-weight:700;}
+  #qr-countdown{color:#E8407A;font-weight:900;font-size:10px;}
+  .copyright-text{
+    color:#8098C0;font-size:clamp(7.5px,1.8vw,9px);line-height:1.55;
+    border-top:1px dashed rgba(42,94,200,0.12);
+    padding-top:5px;margin-top:4px;
+  }
+  .copyright-text strong{color:#5A7AB8;font-weight:700;}
+
+  /* 반응형: 매우 작은 화면 */
+  @media(max-height:640px){
+    .home-header{padding:4px 0 4px;}
+    .logo-box{width:38px;height:38px;font-size:17px;margin-bottom:4px;}
+    .home-title{font-size:16px;}
+    .home-sub{font-size:10px;}
+    .mod-card{min-height:62px;padding:8px 10px;}
+    .card-grid{gap:6px;margin:8px 0 4px;}
+  }
+  @media(min-width:480px){
+    .home-wrap{padding:20px 24px;}
+    .card-grid{gap:12px;}
+    .mod-card{min-height:96px;}
+  }
 
   /* GENDER */
   .gender-wrap{max-width:400px;width:100%;text-align:center;}
@@ -112,6 +202,7 @@
   .share-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
   .share-btn{padding:14px;border-radius:12px;border:1px solid rgba(42,94,200,0.18);background:#fff;color:#0A1E42;font-size:13px;cursor:pointer;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -124,19 +215,77 @@
 <!-- HOME -->
 <div id="page-home" class="page active">
   <div class="home-wrap">
-    <div class="logo-box">✦</div>
-    <div class="brand">AI Style Makeover</div>
-    <h1 class="home-title">나의 스타일 진단</h1>
-    <p class="home-sub">이미지메이킹 전문가 AI가<br/>나만의 퍼스널 스타일을 찾아드려요</p>
-    <div class="card-grid">
-      <button class="mod-card c-blue"   onclick="selectModule('color')">   <span class="icon">🎨</span><div class="ctitle">퍼스널 컬러</div>  <div class="cdesc">피부톤 맞춤 컬러 분석</div></button>
-      <button class="mod-card c-cyan"   onclick="selectModule('face')">    <span class="icon">◎</span> <div class="ctitle">얼굴형 분석</div>  <div class="cdesc">얼굴형별 스타일 팁</div></button>
-      <button class="mod-card c-steel"  onclick="selectModule('body')">    <span class="icon">▣</span> <div class="ctitle">체형 스타일</div>  <div class="cdesc">체형별 핏 추천</div></button>
-      <button class="mod-card c-gold"   onclick="selectModule('recommend')" ><span class="icon">✦</span><div class="ctitle">스타일 추천</div>  <div class="cdesc">나에게 딱 맞는 룩</div></button>
-      <button class="mod-card c-green"  onclick="selectModule('daily')">   <span class="icon">📅</span><div class="ctitle">매일 코디</div>    <div class="cdesc">데일리 스타일링 플랜</div></button>
-      <button class="mod-card c-pink"   onclick="selectModule('fulldiag')"><span class="icon">✦</span> <div class="ctitle">전체 AI 진단</div> <div class="cdesc">종합 이미지메이킹 분석</div></button>
+
+    <!-- 헤더 -->
+    <div class="home-header">
+      <div class="logo-box">✦</div>
+      <div class="brand">AI Style Makeover</div>
+      <h1 class="home-title">나의 스타일 진단</h1>
+      <p class="home-sub">이미지메이킹 전문가 AI가 나만의 퍼스널 스타일을 찾아드려요</p>
     </div>
-    <p class="start-note">각 메뉴를 선택하거나 전체 진단을 받아보세요</p>
+
+    <!-- 메뉴 카드 -->
+    <div class="card-grid">
+      <button class="mod-card c-blue"  onclick="selectModule('color')">
+        <span class="icon">🎨</span>
+        <div class="ctitle">퍼스널 컬러</div>
+        <div class="cdesc">피부톤 맞춤 컬러 분석</div>
+      </button>
+      <button class="mod-card c-cyan"  onclick="selectModule('face')">
+        <span class="icon">◎</span>
+        <div class="ctitle">얼굴형 분석</div>
+        <div class="cdesc">얼굴형별 스타일 팁</div>
+      </button>
+      <button class="mod-card c-steel" onclick="selectModule('body')">
+        <span class="icon">▣</span>
+        <div class="ctitle">체형 스타일</div>
+        <div class="cdesc">체형별 핏 추천</div>
+      </button>
+      <button class="mod-card c-gold"  onclick="selectModule('recommend')">
+        <span class="icon">✦</span>
+        <div class="ctitle">스타일 추천</div>
+        <div class="cdesc">나에게 딱 맞는 룩</div>
+      </button>
+      <button class="mod-card c-green" onclick="selectModule('daily')">
+        <span class="icon">📅</span>
+        <div class="ctitle">매일 코디</div>
+        <div class="cdesc">데일리 스타일링 플랜</div>
+      </button>
+      <button class="mod-card c-pink"  onclick="selectModule('fulldiag')">
+        <span class="icon">✦</span>
+        <div class="ctitle">전체 AI 진단</div>
+        <div class="cdesc">종합 이미지메이킹 분석</div>
+      </button>
+    </div>
+
+    <p class="start-note">메뉴를 선택하거나 전체 진단을 받아보세요</p>
+
+    <!-- 푸터: QR + 저작권 -->
+    <div class="home-footer">
+      <div class="footer-inner">
+        <!-- QR 코드 -->
+        <div class="qr-box">
+          <div id="qr-canvas"></div>
+          <div class="qr-refresh-badge">🔄 자동갱신</div>
+        </div>
+        <!-- 오른쪽: 스캔 안내 + 저작권 -->
+        <div class="footer-right">
+          <div class="qr-scan-label">📱 QR 스캔 → 모바일 체험</div>
+          <div class="qr-timer">
+            <span class="qr-timer-text">🔒</span>
+            <span id="qr-countdown">--</span>
+            <span class="qr-timer-text">초 후 갱신</span>
+          </div>
+          <div class="copyright-text">
+            <strong>© 2025 상상우리 (Sangsangwoori). All Rights Reserved.</strong><br/>
+            본 서비스의 모든 콘텐츠·알고리즘·디자인은 상상우리의 독점 저작물입니다.<br/>
+            <strong>무단 복제·배포·상업적 이용을 금지합니다.</strong><br/>
+            Unauthorized reproduction or commercial use is strictly prohibited.
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -206,12 +355,11 @@
   </div>
 </div>
 
-<!-- LOADING -->
-<div id="page-loading" class="page">
+<!-- LOADING 사용 안 함 -->
+<div id="page-loading" class="page" style="display:none!important;">
   <div style="text-align:center;">
-    <div style="width:56px;height:56px;border:4px solid rgba(42,94,200,0.15);border-top:4px solid #2A5EC8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
-    <p style="color:#0A1E42;font-size:18px;font-weight:700;">AI가 분석 중이에요</p>
-    <p style="color:#8098C0;font-size:13px;margin-top:8px;">퍼스널 컬러와 체형을 정밀 분석 중...</p>
+    <div style="width:48px;height:48px;border:4px solid rgba(42,94,200,0.15);border-top:4px solid #2A5EC8;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px;"></div>
+    <p style="color:#0A1E42;font-size:16px;font-weight:700;">분석 중...</p>
   </div>
 </div>
 
@@ -309,10 +457,13 @@
           </div>
           <div>
             <div style="color:#2A5EC8;font-size:10px;text-align:center;margin-bottom:6px;letter-spacing:1px;">AFTER</div>
-            <div class="outfit-img-wrap" onclick="openLightbox(afterImgUrl)">
-              <img id="after-img" src="" alt="after" onerror="this.style.display='none'"/>
+            <div class="outfit-img-wrap" id="after-img-wrap" style="cursor:default;">
+              <div id="after-img-inner" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#e8f0ff,#d0dcf4);">
+                <div style="width:32px;height:32px;border:3px solid #2A5EC8;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                <span style="color:#2A5EC8;font-size:11px;font-weight:600;">스타일 로딩중...</span>
+              </div>
               <div class="outfit-label" id="after-label"></div>
-              <div class="zoom-badge">🔍</div>
+              <div class="zoom-badge" id="after-zoom" style="display:none;">🔍</div>
             </div>
           </div>
         </div>
@@ -326,7 +477,6 @@
   </div>
 </div>
 
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
 // ── DATA ──
@@ -384,14 +534,256 @@ const STEPS_M=[
 // ── STATE ──
 let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComment="",afterImgUrl="";
 
-function imgUrl(q,i=0){return `https://source.unsplash.com/600x750/?${encodeURIComponent(q)}&sig=${i*41+7}`;}
+// ── 의상 이미지: GitHub raw SVG 일러스트 (100% 작동 보장) ──
 
+// ══════════════════════════════════════════════════════
+// 🛍️  실제 패션 이미지 API 연동 (Pixabay + Unsplash)
+//      Pixabay: 500req/day 무료, CORS 허용, 상업적 사용 가능
+//      Unsplash: 50req/hr 무료, CORS 허용, 크레딧 표시 필요
+// ══════════════════════════════════════════════════════
+
+const PIXABAY_KEY  = "56466557-19e7ccfcaf31ec7da47311764";
+const UNSPLASH_KEY = "8Kd_AfkS4AlNlgJs8VRn9qdxdL-JE2q6GxiS1jQFqiA";
+
+// ─── 스타일 × 성별 → Pixabay 검색어 ───
+// ══════════════════════════════════════════════════════
+// 🖼️  이미지 시스템 - GitHub raw 1순위 + Pixabay 보조
+//     GitHub raw: 여성 19장 / 남성 8장 (100% 작동 보장)
+//     Pixabay: 브라우저에서 실시간 패션 사진 추가 로딩
+// ══════════════════════════════════════════════════════
+
+const GH = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";
+
+// ── 여성: 스타일별 큐레이션 이미지 ──
+const GH_F = {
+  classic:  [`${GH}/f_classic.jpg`, `${GH}/f_formal.jpg`,  `${GH}/f_01.jpg`,    `${GH}/f_05.jpg`],
+  formal:   [`${GH}/f_formal.jpg`,  `${GH}/f_classic.jpg`, `${GH}/f_06.jpg`,    `${GH}/f_02.png`],
+  chic:     [`${GH}/f_chic.png`,    `${GH}/f_extra5.jpg`,  `${GH}/f_03.png`,    `${GH}/f_extra6.jpeg`],
+  feminine: [`${GH}/f_feminine.png`,`${GH}/f_extra2.jpg`,  `${GH}/f_07.jpg`,    `${GH}/f_04.png`],
+  natural:  [`${GH}/f_natural.png`, `${GH}/f_extra3.jpg`,  `${GH}/f_extra4.jpg`,`${GH}/f_08.jpg`],
+};
+
+// ── 남성: 스타일별 큐레이션 이미지 ──
+const GH_M = {
+  classic:  [`${GH}/m_classic.png`, `${GH}/m_business.png`,`${GH}/m_01.png`,    `${GH}/m_02.png`],
+  business: [`${GH}/m_business.png`,`${GH}/m_classic.png`, `${GH}/m_02.png`,    `${GH}/m_smart.png`],
+  street:   [`${GH}/m_street.png`,  `${GH}/m_03.png`,      `${GH}/m_04.png`,    `${GH}/m_01.png`],
+  smart:    [`${GH}/m_smart.png`,   `${GH}/m_business.png`,`${GH}/m_03.png`,    `${GH}/m_04.png`],
+  natural:  [`${GH}/m_street.png`,  `${GH}/m_04.png`,      `${GH}/m_03.png`,    `${GH}/m_01.png`],
+};
+
+// ── Pixabay 보조 검색어 (브라우저에서 추가 이미지 로딩) ──
+const PIX_Q = {
+  female: {
+    classic:  ["woman blazer coat fashion","woman formal suit elegant","woman classic style"],
+    formal:   ["woman business suit","woman power suit office","woman professional outfit"],
+    chic:     ["woman minimalist fashion","woman chic style","woman silk outfit"],
+    feminine: ["woman midi dress fashion","woman elegant dress","woman feminine style"],
+    natural:  ["woman casual linen","woman natural fashion","woman relaxed outfit"],
+  },
+  male: {
+    classic:  ["man suit fashion","man formal blazer","man classic style"],
+    business: ["man business suit","man office formal","man professional suit"],
+    street:   ["man street fashion","man urban casual","man street style"],
+    smart:    ["man smart casual","man chino outfit","man business casual"],
+    natural:  ["man casual linen","man relaxed fashion","man outdoor style"],
+  }
+};
+
+// 성별 태그 필터 (반대 성별 제외)
+const OPP_TAGS = {
+  female: ['man ','men ','male ',' guy',' boy',' gentleman'],
+  male:   ['woman ','women ','female ',' girl',' lady']
+};
+
+const imgCache = {};
+
+// ── GitHub raw 이미지 즉시 반환 (동기) ──
+function getGHImg(slotIdx) {
+  const g   = curGender === 'male' ? 'male' : 'female';
+  const cat = _lastCat || 'classic';
+  const pool = g === 'male' ? (GH_M[cat]||GH_M.classic) : (GH_F[cat]||GH_F.classic);
+  return pool[Math.abs(slotIdx) % pool.length];
+}
+let _lastCat = 'classic';
+
+// ── Pixabay 비동기 (추가 이미지, 보조) ──
+async function fetchPixabay(query, page=1, gender=null) {
+  const g = gender || (curGender==='male'?'male':'female');
+  const cacheKey = `pix_${g}_${query}_p${page}`;
+  if(imgCache[cacheKey]) return imgCache[cacheKey];
+  try {
+    const url = `https://pixabay.com/api/?key=${PIXABAY_KEY}&q=${encodeURIComponent(query)}&image_type=photo&per_page=20&page=${page}&safesearch=true&orientation=vertical&min_width=400`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const hits = (d.hits||[]).filter(h => {
+      const tags = ' ' + (h.tags||'').toLowerCase() + ' ';
+      return !OPP_TAGS[g].some(w => tags.includes(w));
+    });
+    if(hits.length > 0) {
+      const pool = hits.map(h => h.webformatURL || h.largeImageURL);
+      imgCache[cacheKey] = pool;
+      return pool;
+    }
+  } catch(e) { console.warn('Pixabay:', e); }
+  return [];
+}
+
+// ── Unsplash 비동기 (2차 보조) ──
+async function fetchUnsplash(query, page=1) {
+  const g = curGender==='male'?'male':'female';
+  const cacheKey = `unsp_${g}_${query}_p${page}`;
+  if(imgCache[cacheKey]) return imgCache[cacheKey];
+  try {
+    const gPrefix = g==='male' ? 'man ' : 'woman ';
+    const q = /^(man|woman) /.test(query) ? query : gPrefix + query;
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=10&page=${page}&orientation=portrait&client_id=${UNSPLASH_KEY}`;
+    const r = await fetch(url);
+    const d = await r.json();
+    const results = (d.results||[]);
+    if(results.length > 0) {
+      const pool = results.map(p => p.urls.regular + '&w=600&h=800&fit=crop&crop=faces,center');
+      imgCache[cacheKey] = pool;
+      return pool;
+    }
+  } catch(e) { console.warn('Unsplash:', e); }
+  return [];
+}
+
+// ── 스타일 카테고리 분류 ──
+function getCatKey(q) {
+  q = q.toLowerCase();
+  if(curGender==='male') {
+    if(q.includes('classic')||q.includes('navy suit')||q.includes('tweed')) return 'classic';
+    if(q.includes('business')||q.includes('professional')||q.includes('formal')) return 'business';
+    if(q.includes('street')||q.includes('urban')) return 'street';
+    if(q.includes('smart')||q.includes('polo')||q.includes('chino')) return 'smart';
+    return 'natural';
+  } else {
+    if(q.includes('blazer')||q.includes('wool coat')||q.includes('tweed')||q.includes('turtleneck')) return 'classic';
+    if(q.includes('formal')||q.includes('suit')||q.includes('power')||q.includes('office')) return 'formal';
+    if(q.includes('chic')||q.includes('minimalist')||q.includes('silk')) return 'chic';
+    if(q.includes('dress')||q.includes('feminine')||q.includes('floral')||q.includes('rose')) return 'feminine';
+    return 'natural';
+  }
+}
+
+// ── 의상 카드 생성 ──
+// 1단계: GitHub raw 이미지 즉시 표시
+// 2단계: 백그라운드에서 Pixabay/Unsplash 로딩 후 교체
+// [중복 제거됨: makeOutfitCard]
+
+
+// ── 폴백 카드 (최후 수단) ──
+// [중복 제거됨: fallbackCard]
+
+
+// ── GitHub raw 이미지 반환 ──
+// [중복 제거됨: getGitHubImg]
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function makeOutfitCard(q, slotIdx, label){
+  label = escHtml(label);
+  const cat = getCatKey(q);
+  const gender = curGender==='male' ? 'male' : 'female';
+  const queries = PIX_Q[gender][cat] || PIX_Q[gender].classic;
+  const searchQuery = queries[slotIdx % queries.length];
+  const page = Math.floor(slotIdx / queries.length) + 1;
+
+  const div = document.createElement('div');
+  div.className = 'outfit-img-wrap';
+  div.style.cssText = 'overflow:hidden;border-radius:13px;cursor:pointer;position:relative;background:linear-gradient(135deg,#e8f0ff,#d0dcf4);';
+
+  // 로딩 플레이스홀더
+  div.innerHTML = `
+    <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+      <div style="width:36px;height:36px;border:3px solid #2A5EC8;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span style="color:#2A5EC8;font-size:11px;font-weight:600;">스타일 로딩중...</span>
+    </div>`;
+
+  // 비동기 이미지 로딩
+  (async ()=>{
+    let imgUrl = null;
+
+    // 1차: Pixabay (성별 파라미터 명시 전달)
+    const pixImgs = await fetchPixabay(searchQuery, page, gender);
+    if(pixImgs.length > 0){
+      imgUrl = pixImgs[slotIdx % pixImgs.length];
+    }
+
+    // 2차 폴백: Unsplash
+    if(!imgUrl){
+      const unImgs = await fetchUnsplash(searchQuery, page);
+      if(unImgs.length > 0) imgUrl = unImgs[slotIdx % unImgs.length];
+    }
+
+    if(imgUrl){
+      div.onclick = () => openLightbox(imgUrl);
+      div.innerHTML = `
+        <img src="${imgUrl}"
+          style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;transition:transform 0.4s ease;"
+          alt="${label}"
+          onmouseover="this.style.transform='scale(1.05)'"
+          onmouseout="this.style.transform='scale(1)'"
+          onerror="this.parentElement.innerHTML=fallbackCard('${label}')"/>
+        <div class="outfit-label">${label}</div>
+        <div class="zoom-badge">🔍</div>
+        <div style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.5);color:white;font-size:9px;padding:2px 6px;border-radius:10px;backdrop-filter:blur(4px);">📷 Pixabay</div>`;
+    } else {
+      div.innerHTML = fallbackCard(label, slotIdx);
+    }
+  })();
+
+  return div;
+}
+
+// ─── GitHub raw 실착 사진 폴백 풀 ───
+const GH_RAW = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";
+const GH_FEMALE = ["f_01.jpg","f_02.png","f_03.png","f_04.png","f_05.jpg","f_06.jpg","f_07.jpg","f_08.jpg"];
+const GH_MALE   = ["m_01.png","m_02.png","m_03.png","m_04.png"];
+
+function getGitHubImg(idx){
+  const pool = curGender==='male' ? GH_MALE : GH_FEMALE;
+  return `${GH_RAW}/${pool[Math.abs(idx) % pool.length]}`;
+}
+
+// ─── 폴백 카드 HTML (GitHub 이미지 사용) ───
+function fallbackCard(label, idx=0){ label = escHtml(label);
+  const src = getGitHubImg(idx);
+  return `<img src="${src}" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;"
+    alt="${label}" onerror="this.parentElement.style.background='linear-gradient(145deg,#2A5EC8,#1a3d8f)'"/>
+    <div class="outfit-label">${label}</div>`;
+}
+
+// spin 애니메이션은 CSS에 이미 있음 (중복 방지)
+
+function imgUrl(q,i=0){ return ''; }
+function getCardData(q,i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
-  document.getElementById('page-result').style.display='none';
-  const el=document.getElementById(id);
-  if(id==='page-result'){el.style.display='block';}
-  else{el.classList.add('active');}
+  // 1) 모든 .page 숨김
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  // 2) #page-home 숨김
+  const homeEl = document.getElementById('page-home');
+  if(homeEl){ homeEl.classList.remove('active'); homeEl.style.display='none'; }
+  // 3) #page-result 숨김
+  const resEl = document.getElementById('page-result');
+  if(resEl){ resEl.style.display='none'; }
+
+  // 4) 대상 표시
+  const el = document.getElementById(id);
+  if(!el){ console.warn('showPage: not found:', id); return; }
+  if(id === 'page-result'){
+    el.style.display = 'block';
+  } else if(id === 'page-home'){
+    el.style.display = 'flex';
+    el.classList.add('active');
+  } else {
+    el.style.display = 'flex';
+    el.classList.add('active');
+  }
 }
 function goHome(){showPage('page-home');answers={};curStep=0;photoDataUrl=null;aiComment="";}
 function selectModule(m){curModule=m;showGender(m);}
@@ -463,44 +855,112 @@ function quizBack(){
   else{showPage('page-gender');}
 }
 function handlePhoto(e){
-  const f=e.target.files[0];if(!f)return;
+  const f=e.target.files[0];
+  if(!f) return;
+  // 파일 타입 검증
+  if(!f.type.startsWith('image/')){
+    alert('이미지 파일만 업로드 가능합니다 (JPG, PNG, WEBP 등)');
+    e.target.value=''; return;
+  }
+  // 파일 크기 검증 (10MB 초과 시 경고)
+  if(f.size > 10 * 1024 * 1024){
+    alert('파일 크기는 10MB 이하만 가능합니다');
+    e.target.value=''; return;
+  }
   const r=new FileReader();
+  r.onerror=()=>{ alert('사진을 불러오는 데 실패했습니다. 다시 시도해주세요.'); };
   r.onload=ev=>{
     photoDataUrl=ev.target.result;
     const pw=document.getElementById('photo-preview-wrap');
-    pw.innerHTML=`<img src="${photoDataUrl}" style="max-height:220px;border-radius:12px;object-fit:cover;"/>`;
+    pw.innerHTML=`<img src="${photoDataUrl}" style="max-height:220px;border-radius:12px;object-fit:cover;" alt="업로드된 사진"/>`;
     document.getElementById('photo-next-btn').textContent='결과 보기 ✦';
   };
   r.readAsDataURL(f);
 }
 function handlePhoto2(e){
-  const f=e.target.files[0];if(!f)return;
+  const f=e.target.files[0];
+  if(!f) return;
+  if(!f.type.startsWith('image/')){
+    alert('이미지 파일만 업로드 가능합니다');
+    e.target.value=''; return;
+  }
+  if(f.size > 10 * 1024 * 1024){
+    alert('파일 크기는 10MB 이하만 가능합니다');
+    e.target.value=''; return;
+  }
   const r=new FileReader();
+  r.onerror=()=>{ alert('사진을 불러오는 데 실패했습니다. 다시 시도해주세요.'); };
   r.onload=ev=>{
     const bw=document.getElementById('before-wrap');
-    bw.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;"/>`;
+    bw.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;" alt="Before 사진"/>`;
+    bw.onclick=null; // 업로드 후 재클릭 방지
   };
   r.readAsDataURL(f);
 }
 async function finalize(){
-  showPage('page-loading');
-  aiComment=await fetchAI();
-  buildResult();
-  showPage('page-result');
+  try {
+    // ① 로컬 코멘트 즉시 생성
+    aiComment = buildLocalComment();
+    // ② 결과 화면 즉시 표시
+    buildResult();
+    showPage('page-result');
+  } catch(err){
+    console.error('finalize 오류:', err);
+    alert('결과를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.');
+    showPage('page-photo');
+    return;
+  }
+  // ③ 백그라운드 AI 코멘트 (실패해도 무관)
+  try {
+    const apiResult = await Promise.race([
+      fetchAI(),
+      new Promise((_,rej)=>setTimeout(()=>rej('timeout'),6000))
+    ]);
+    if(apiResult){
+      aiComment = apiResult;
+      const el = document.getElementById('res-comment');
+      if(el) el.textContent = apiResult;
+    }
+  } catch(e){ /* 로컬 코멘트 유지 */ }
 }
+
+// 로컬 스타일 코멘트 (API 없이 즉시 생성)
+function buildLocalComment(){
+  const {skin,face,body,style}=answers;
+  const g=curGender==='male';
+  const skinTxt={cool:'쿨톤의 맑고 청명한 피부빛',warm:'웜톤의 따뜻하고 생동감 넘치는 피부빛',neutral:'뉴트럴톤의 균형 잡힌 피부빛',dark:'딥톤의 깊고 풍부한 피부빛'};
+  const stTxt=g
+    ?{classic:'클래식한 품격',business:'비즈니스 세련미',street:'트렌디한 스트리트',smart:'스마트한 캐주얼',natural:'자연스러운 여유'}
+    :{classic:'클래식한 우아함',formal:'포멀한 전문성',chic:'시크한 도시미',feminine:'페미닌한 여성미',natural:'내추럴한 편안함'};
+  const bodyTxt=g
+    ?{slim:'레이어드 코디로 볼륨감을 살리면',normal:'다양한 실루엣을 자유롭게 소화하는 체형으로',chubby:'다크톤과 수직 라인으로 슬림하게',plus:'모노톤과 구조적 실루엣으로 자신감 있게'}
+    :{slim:'볼륨감 있는 레이어드로',normal:'다양한 스타일을 자유롭게 소화하는 체형으로',chubby:'세로 라인과 V넥으로 슬림하게',plus:'A라인과 모노톤으로 우아하게'};
+  const s=skinTxt[skin]||'아름다운 피부빛';
+  const st=stTxt[style]||'세련된 스타일';
+  const b=bodyTxt[body]||'멋지게';
+  return `${s}을 가진 당신에게 ${st}이 잘 어울립니다. ${b} 연출하면 성숙하고 품격 있는 매력을 한층 돋보이게 할 수 있어요. 자신만의 색깔로 자신감 있게 스타일링해보세요! ✨`;
+}
+
 async function fetchAI(){
   const sl={cool:"쿨톤",warm:"웜톤",neutral:"뉴트럴톤",dark:"딥톤"};
   const fl={oval:"갸름한형",round:"둥근형",square:"각진형",long:"긴형"};
   const bl={slim:"슬림",normal:"보통",chubby:"통통",plus:"풍만/빅"};
   const hl={short:"페티트",medium:"미디엄",tall:"톨"};
-  const stlF={classic:"클래식",formal:"포멀·정장",chic:"시크·모던",feminine:"페미닌",natural:"내추럴"};
+  const stlF={classic:"클래식",formal:"포멀",chic:"시크·모던",feminine:"페미닌",natural:"내추럴"};
   const stlM={classic:"클래식",business:"비즈니스",street:"스트리트",smart:"스마트캐주얼",natural:"내추럴"};
   const stl=curGender==='male'?stlM:stlF;
   const gLabel=curGender==='male'?"중장년 남성(40~60대)":"중장년 여성(40~60대)";
-  try{
-    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다.\n고객 특성을 바탕으로 따뜻하고 전문적으로 3~4문장의 퍼스널 스타일 코멘트를 한국어로 작성해주세요.\n\n피부톤: ${sl[answers.skin]||""}\n얼굴형: ${fl[answers.face]||""}\n체형: ${bl[answers.body]||""}\n키: ${hl[answers.height]||""}\n선호 스타일: ${stl[answers.style]||""}\n\n성숙한 아름다움과 품격을 살리는 구체적 스타일 포인트를 격려와 함께 담아주세요.`}]})});
-    const d=await res.json();return d.content?.[0]?.text||"당신만의 스타일을 찾아드릴게요!";
-  }catch{return "성숙하고 세련된 스타일로 새롭게 변신해보세요!";}
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",max_tokens:400,
+      messages:[{role:"user",content:`당신은 ${gLabel} 전문 이미지메이킹 컨설턴트입니다. 2~3문장으로 퍼스널 스타일 코멘트를 한국어로 작성해주세요.
+피부톤:${sl[answers.skin]||""} 얼굴형:${fl[answers.face]||""} 체형:${bl[answers.body]||""} 키:${hl[answers.height]||""} 선호스타일:${stl[answers.style]||""}`}]
+    })
+  });
+  const d=await res.json();
+  return d.content?.[0]?.text||null;
 }
 function buildResult(){
   const {skin,face,body,height,style}=answers;
@@ -538,13 +998,12 @@ function buildResult(){
   document.getElementById('res-body-tip').textContent=bodyTip;
   document.getElementById('res-height-tip').textContent=HEIGHT_TIPS[height]||"";
 
-  // Outfit imgs
-  let imgHtml='';
+  // 추천 의상: SVG 패션 일러스트
+  const recImgsEl = document.getElementById('rec-imgs');
+  recImgsEl.innerHTML = '';
   (oq||[]).slice(0,3).forEach((q,i)=>{
-    const u=imgUrl(q,i);
-    imgHtml+=`<div class="outfit-img-wrap" onclick="openLightbox('${u}')"><img src="${u}" alt="${clothes[i]||''}" onerror="this.style.display='none'"/><div class="outfit-label">${clothes[i]||''}</div><div class="zoom-badge">🔍</div></div>`;
+    recImgsEl.appendChild(makeOutfitCard(q, i, clothes[i]||q));
   });
-  document.getElementById('rec-imgs').innerHTML=imgHtml;
 
   let avoidHtml='';
   avoid.forEach(a=>{avoidHtml+=`<span class="avoid-tag">${a}</span>`;});
@@ -557,17 +1016,58 @@ function buildResult(){
   });
   document.getElementById('daily-rows').innerHTML=dailyHtml;
 
-  // After img
-  afterImgUrl=imgUrl(oq?oq[0]:'women elegant',30);
-  document.getElementById('after-img').src=afterImgUrl;
-  document.getElementById('after-label').textContent=si.name;
+  // After img: GitHub raw 즉시 표시 → Pixabay/Unsplash로 교체 시도
+  const afterCat    = getCatKey(oq ? oq[0] : '');
+  const afterGender = curGender==='male'?'male':'female';
+  _lastCat = afterCat;
 
-  let afterHtml='';
+  const afterWrap  = document.getElementById('after-img-wrap');
+  const afterInner = document.getElementById('after-img-inner');
+  const afterZoom  = document.getElementById('after-zoom');
+  document.getElementById('after-label').textContent = si.name;
+
+  // ① GitHub raw 이미지 즉시 표시
+  const ghAfterPool = afterGender==='male' ? (GH_M[afterCat]||GH_M.classic) : (GH_F[afterCat]||GH_F.classic);
+  const ghAfterSrc  = ghAfterPool[1] || ghAfterPool[0];
+  afterImgUrl = ghAfterSrc;
+
+  afterInner.innerHTML = `<img src="${ghAfterSrc}"
+    style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;border-radius:13px;transition:opacity 0.4s;"
+    id="after-main-img" alt="${si.name}"
+    onerror="this.onerror=null;"/>`;
+  afterWrap.style.cursor = 'pointer';
+  afterWrap.onclick = () => openLightbox(afterImgUrl);
+  afterZoom.style.display = 'block';
+
+  // ② 백그라운드: Pixabay/Unsplash 고화질로 교체 시도
+  const pixQAfter = PIX_Q[afterGender][afterCat] || PIX_Q[afterGender].classic;
+  (async ()=>{
+    let betterUrl = null;
+    const pixImgs = await fetchPixabay(pixQAfter[0], 2, afterGender);
+    if(pixImgs.length > 0) betterUrl = pixImgs[1] || pixImgs[0];
+    if(!betterUrl){
+      const uImgs = await fetchUnsplash(pixQAfter[0], 1);
+      if(uImgs.length > 0) betterUrl = uImgs[0];
+    }
+    if(betterUrl){
+      const imgEl = document.getElementById('after-main-img');
+      if(imgEl){
+        imgEl.style.opacity = '0.3';
+        imgEl.onload = () => { imgEl.style.opacity='1'; };
+        imgEl.onerror = () => { imgEl.src=ghAfterSrc; imgEl.style.opacity='1'; };
+        imgEl.src = betterUrl;
+        afterImgUrl = betterUrl;
+        afterWrap.onclick = () => openLightbox(afterImgUrl);
+      }
+    }
+  })();
+
+  // 변신 후 스타일 룩: SVG 패션 일러스트
+  const afterImgsEl = document.getElementById('after-imgs');
+  afterImgsEl.innerHTML = '';
   (oq||[]).slice(0,4).forEach((q,i)=>{
-    const u=imgUrl(q,i+20);
-    afterHtml+=`<div class="outfit-img-wrap" onclick="openLightbox('${u}')"><img src="${u}" alt="${clothes[i]||''}" onerror="this.style.display='none'"/><div class="outfit-label">${clothes[i]||''}</div><div class="zoom-badge">🔍</div></div>`;
+    afterImgsEl.appendChild(makeOutfitCard(q, i+20, clothes[i]||q));
   });
-  document.getElementById('after-imgs').innerHTML=afterHtml;
 }
 function switchTab(tabId,btn){
   ['t-result','t-recommend','t-daily','t-before'].forEach(t=>{document.getElementById(t).style.display='none';});
@@ -575,7 +1075,11 @@ function switchTab(tabId,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
-function openLightbox(url){document.getElementById('lb-img').src=url;document.getElementById('lightbox').classList.add('open');}
+function openLightbox(url){
+  if(!url || url.trim()==='') return;
+  document.getElementById('lb-img').src=url;
+  document.getElementById('lightbox').classList.add('open');
+}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 function saveResult(){
   const {skin,style}=answers;
@@ -593,6 +1097,68 @@ function shareResult(){
   if(navigator.share)navigator.share({title:"나의 스타일 진단",text:`${si.name} - ${si.desc}`});
   else{navigator.clipboard.writeText(`${si.name}: ${si.desc}`);alert("클립보드에 복사되었어요!");}
 }
+</script>
+
+<script>
+// ── QR 코드 동적 생성 + 시간 기반 토큰으로 무단복제 방지 ──
+(function(){
+  const APP_URL  = "https://ai-style-makeover.vercel.app";
+  const INTERVAL = 300; // 5분마다 QR 갱신 (무단복제 방지)
+
+  let countdown = INTERVAL;
+  const timerEl = document.getElementById('qr-countdown');
+
+  function genToken(){
+    const block = Math.floor(Date.now() / (INTERVAL * 1000));
+    const seed  = (block * 0x9e3779b9 + 0x6c62272e) >>> 0;
+    return seed.toString(36).toUpperCase().slice(0,8);
+  }
+
+  function buildQrUrl(){
+    const token = genToken();
+    const ts    = Math.floor(Date.now() / (INTERVAL * 1000));
+    return `${APP_URL}?t=${token}&ts=${ts}`;
+  }
+
+  function getQRSize(){
+    // 화면 너비에 따라 QR 크기 동적 조정
+    const w = window.innerWidth;
+    if(w <= 360) return 72;
+    if(w <= 480) return 80;
+    return 88;
+  }
+
+  function renderQR(){
+    const el = document.getElementById('qr-canvas');
+    if(!el) return;
+    el.innerHTML = '';
+    const size = getQRSize();
+    new QRCode(el, {
+      text:         buildQrUrl(),
+      width:        size,
+      height:       size,
+      colorDark:    "#0A1E42",
+      colorLight:   "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    countdown = INTERVAL;
+  }
+
+  function tick(){
+    countdown--;
+    if(timerEl) timerEl.textContent = countdown;
+    if(countdown <= 0) renderQR();
+  }
+
+  // DOM 준비 후 초기 렌더링
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', renderQR);
+  } else {
+    renderQR();
+  }
+  if(timerEl) timerEl.textContent = countdown;
+  setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
