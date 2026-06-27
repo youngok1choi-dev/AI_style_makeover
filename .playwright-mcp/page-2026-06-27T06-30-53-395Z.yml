@@ -1,0 +1,48 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: ✦
+    - generic [ref=e6]: AI Style Makeover
+    - heading "나의 스타일 진단" [level=1] [ref=e7]
+    - paragraph [ref=e8]: 이미지메이킹 전문가 AI가 나만의 퍼스널 스타일을 찾아드려요
+  - generic [ref=e9]:
+    - button "🎨 퍼스널 컬러 피부톤 맞춤 컬러 분석" [ref=e10] [cursor=pointer]:
+      - generic [ref=e11]: 🎨
+      - generic [ref=e12]: 퍼스널 컬러
+      - generic [ref=e13]: 피부톤 맞춤 컬러 분석
+    - button "◎ 얼굴형 분석 얼굴형별 스타일 팁" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15]: ◎
+      - generic [ref=e16]: 얼굴형 분석
+      - generic [ref=e17]: 얼굴형별 스타일 팁
+    - button "▣ 체형 스타일 체형별 핏 추천" [ref=e18] [cursor=pointer]:
+      - generic [ref=e19]: ▣
+      - generic [ref=e20]: 체형 스타일
+      - generic [ref=e21]: 체형별 핏 추천
+    - button "✦ 스타일 추천 나에게 딱 맞는 룩" [ref=e22] [cursor=pointer]:
+      - generic [ref=e23]: ✦
+      - generic [ref=e24]: 스타일 추천
+      - generic [ref=e25]: 나에게 딱 맞는 룩
+    - button "📅 매일 코디 데일리 스타일링 플랜" [ref=e26] [cursor=pointer]:
+      - generic [ref=e27]: 📅
+      - generic [ref=e28]: 매일 코디
+      - generic [ref=e29]: 데일리 스타일링 플랜
+    - button "✦ 전체 AI 진단 종합 이미지메이킹 분석" [ref=e30] [cursor=pointer]:
+      - generic [ref=e31]: ✦
+      - generic [ref=e32]: 전체 AI 진단
+      - generic [ref=e33]: 종합 이미지메이킹 분석
+  - paragraph [ref=e34]: 메뉴를 선택하거나 전체 진단을 받아보세요
+  - generic [ref=e36]:
+    - generic [ref=e37]:
+      - generic "https://ai-style-makeover.vercel.app?t=YGTJL8&ts=5941806" [ref=e38]:
+        - img [ref=e39]
+      - generic [ref=e40]: 🔄 자동갱신
+    - generic [ref=e41]:
+      - generic [ref=e42]: 📱 QR 스캔 → 모바일 체험
+      - generic [ref=e43]:
+        - generic [ref=e44]: 🔒
+        - generic [ref=e45]: "300"
+        - generic [ref=e46]: 초 후 갱신
+      - generic [ref=e47]:
+        - strong [ref=e48]: © 2025 상상우리 (Sangsangwoori). All Rights Reserved.
+        - text: 본 서비스의 모든 콘텐츠·알고리즘·디자인은 상상우리의 독점 저작물입니다.
+        - strong [ref=e49]: 무단 복제·배포·상업적 이용을 금지합니다.
+        - text: Unauthorized reproduction or commercial use is strictly prohibited.

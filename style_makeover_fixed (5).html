@@ -8,7 +8,6 @@
 <!-- v2026.06.27.fast -->
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AI 스타일 메이크오버</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%232A5EC8'/><stop offset='50%25' stop-color='%236A3DB8'/><stop offset='100%25' stop-color='%23E8407A'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text y='.9em' font-size='72' x='14'>✨</text></svg>"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#E8F0FC;min-height:100vh;}
@@ -951,7 +950,7 @@ async function fetchAI(){
   const stlM={classic:"클래식",business:"비즈니스",street:"스트리트",smart:"스마트캐주얼",natural:"내추럴"};
   const stl=curGender==='male'?stlM:stlF;
   const gLabel=curGender==='male'?"중장년 남성(40~60대)":"중장년 여성(40~60대)";
-  const res=await fetch("/api/chat",{
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({

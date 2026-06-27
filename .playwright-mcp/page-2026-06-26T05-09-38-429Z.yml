@@ -1,0 +1,33 @@
+- generic [ref=e3]:
+  - generic [ref=e4]: ✦
+  - generic [ref=e5]: AI Style Makeover
+  - heading "나의 스타일 진단" [level=1] [ref=e6]
+  - paragraph [ref=e7]:
+    - text: 이미지메이킹 전문가 AI가
+    - text: 나만의 퍼스널 스타일을 찾아드려요
+  - generic [ref=e8]:
+    - button "🎨 퍼스널 컬러 피부톤 맞춤 컬러 분석" [ref=e9] [cursor=pointer]:
+      - generic [ref=e10]: 🎨
+      - generic [ref=e11]: 퍼스널 컬러
+      - generic [ref=e12]: 피부톤 맞춤 컬러 분석
+    - button "◎ 얼굴형 분석 얼굴형별 스타일 팁" [ref=e13] [cursor=pointer]:
+      - generic [ref=e14]: ◎
+      - generic [ref=e15]: 얼굴형 분석
+      - generic [ref=e16]: 얼굴형별 스타일 팁
+    - button "▣ 체형 스타일 체형별 핏 추천" [ref=e17] [cursor=pointer]:
+      - generic [ref=e18]: ▣
+      - generic [ref=e19]: 체형 스타일
+      - generic [ref=e20]: 체형별 핏 추천
+    - button "✦ 스타일 추천 나에게 딱 맞는 룩" [ref=e21] [cursor=pointer]:
+      - generic [ref=e22]: ✦
+      - generic [ref=e23]: 스타일 추천
+      - generic [ref=e24]: 나에게 딱 맞는 룩
+    - button "📅 매일 코디 데일리 스타일링 플랜" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: 📅
+      - generic [ref=e27]: 매일 코디
+      - generic [ref=e28]: 데일리 스타일링 플랜
+    - button "✦ 전체 AI 진단 종합 이미지메이킹 분석" [ref=e29] [cursor=pointer]:
+      - generic [ref=e30]: ✦
+      - generic [ref=e31]: 전체 AI 진단
+      - generic [ref=e32]: 종합 이미지메이킹 분석
+  - paragraph [ref=e33]: 각 메뉴를 선택하거나 전체 진단을 받아보세요

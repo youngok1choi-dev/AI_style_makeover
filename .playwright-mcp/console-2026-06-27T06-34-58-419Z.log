@@ -1,0 +1,2 @@
+[   17136ms] [ERROR] Access to fetch at 'https://api.anthropic.com/v1/messages' from origin 'https://ai-style-makeover.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ https://ai-style-makeover.vercel.app/:0
+[   17137ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://api.anthropic.com/v1/messages:0
