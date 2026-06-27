@@ -469,7 +469,6 @@
   </div>
 </div>
 
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
 <script>
 // ── DATA ──
@@ -528,7 +527,6 @@ const STEPS_M=[
 let curModule=null,curGender=null,curStep=0,answers={},photoDataUrl=null,aiComment="",afterImgUrl="";
 
 // ── 의상 이미지: GitHub raw SVG 일러스트 (100% 작동 보장) ──
-const RAW_BASE = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images";
 
 // ══════════════════════════════════════════════════════
 // 🛍️  실제 패션 이미지 API 연동 (Pixabay + Unsplash)
@@ -559,7 +557,6 @@ const PIXABAY_QUERIES = {
 
 // ─── 이미지 캐시 (중복 API 호출 방지) ───
 const imgCache = {};
-const imgCacheBySlot = {};  // 슬롯별 캐시 (같은 위치에 다른 이미지)
 
 // ─── Pixabay API 호출 ───
 async function fetchPixabay(query, page=1){
@@ -617,7 +614,9 @@ function getCatKey(q){
 }
 
 // ─── 의상 카드 생성 (비동기 이미지 로딩) ───
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function makeOutfitCard(q, slotIdx, label){
+  label = escHtml(label);
   const cat = getCatKey(q);
   const gender = curGender==='male' ? 'male' : 'female';
   const queries = PIXABAY_QUERIES[gender][cat] || PIXABAY_QUERIES[gender].classic;
@@ -672,7 +671,7 @@ function makeOutfitCard(q, slotIdx, label){
 }
 
 // ─── 폴백 카드 HTML ───
-function fallbackCard(label){
+function fallbackCard(label){ label = escHtml(label);
   return `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(145deg,#2A5EC8,#1a3d8f);color:white;gap:8px;">
     <span style="font-size:44px;">👗</span>
     <span style="font-size:12px;font-weight:700;text-align:center;padding:0 12px;">${label}</span>
@@ -690,11 +689,16 @@ if(!document.getElementById('spin-style')){
 function imgUrl(q,i=0){ return ''; }
 function getCardData(q,i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='';});
+  // .page + #page-home 모두 초기화
+  document.querySelectorAll('.page, #page-home').forEach(p=>{
+    p.classList.remove('active');
+    if(p.id !== 'page-home') p.style.display='';
+  });
   document.getElementById('page-result').style.display='none';
   const el=document.getElementById(id);
-  if(id==='page-result'){el.style.display='block';}
-  else{el.classList.add('active');}
+  if(!el){ console.warn('showPage: element not found:', id); return; }
+  if(id==='page-result'){ el.style.display='block'; }
+  else{ el.classList.add('active'); }
 }
 function goHome(){showPage('page-home');answers={};curStep=0;photoDataUrl=null;aiComment="";}
 function selectModule(m){curModule=m;showGender(m);}
@@ -766,22 +770,45 @@ function quizBack(){
   else{showPage('page-gender');}
 }
 function handlePhoto(e){
-  const f=e.target.files[0];if(!f)return;
+  const f=e.target.files[0];
+  if(!f) return;
+  // 파일 타입 검증
+  if(!f.type.startsWith('image/')){
+    alert('이미지 파일만 업로드 가능합니다 (JPG, PNG, WEBP 등)');
+    e.target.value=''; return;
+  }
+  // 파일 크기 검증 (10MB 초과 시 경고)
+  if(f.size > 10 * 1024 * 1024){
+    alert('파일 크기는 10MB 이하만 가능합니다');
+    e.target.value=''; return;
+  }
   const r=new FileReader();
+  r.onerror=()=>{ alert('사진을 불러오는 데 실패했습니다. 다시 시도해주세요.'); };
   r.onload=ev=>{
     photoDataUrl=ev.target.result;
     const pw=document.getElementById('photo-preview-wrap');
-    pw.innerHTML=`<img src="${photoDataUrl}" style="max-height:220px;border-radius:12px;object-fit:cover;"/>`;
+    pw.innerHTML=`<img src="${photoDataUrl}" style="max-height:220px;border-radius:12px;object-fit:cover;" alt="업로드된 사진"/>`;
     document.getElementById('photo-next-btn').textContent='결과 보기 ✦';
   };
   r.readAsDataURL(f);
 }
 function handlePhoto2(e){
-  const f=e.target.files[0];if(!f)return;
+  const f=e.target.files[0];
+  if(!f) return;
+  if(!f.type.startsWith('image/')){
+    alert('이미지 파일만 업로드 가능합니다');
+    e.target.value=''; return;
+  }
+  if(f.size > 10 * 1024 * 1024){
+    alert('파일 크기는 10MB 이하만 가능합니다');
+    e.target.value=''; return;
+  }
   const r=new FileReader();
+  r.onerror=()=>{ alert('사진을 불러오는 데 실패했습니다. 다시 시도해주세요.'); };
   r.onload=ev=>{
     const bw=document.getElementById('before-wrap');
-    bw.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;"/>`;
+    bw.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:13px;" alt="Before 사진"/>`;
+    bw.onclick=null; // 업로드 후 재클릭 방지
   };
   r.readAsDataURL(f);
 }
@@ -894,10 +921,11 @@ function buildResult(){
     }
 
     afterImgUrl = url;
+    const fallbackSrc = `https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people/${afterGender==='male'?'m_classic.png':'f_classic.jpg'}`;
     afterInner.innerHTML = `<img src="${url}"
       style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;border-radius:13px;"
       alt="${si.name}"
-      onerror="this.src='https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people/${afterGender==='male'?'m_classic.png':'f_classic.jpg'}'"/>`;
+      onerror="this.onerror=null;this.src='${fallbackSrc}'"/>`;
     afterWrap.style.cursor = 'pointer';
     afterWrap.onclick = () => openLightbox(afterImgUrl);
     afterZoom.style.display = 'block';
@@ -916,7 +944,11 @@ function switchTab(tabId,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
 }
-function openLightbox(url){document.getElementById('lb-img').src=url;document.getElementById('lightbox').classList.add('open');}
+function openLightbox(url){
+  if(!url || url.trim()==='') return;
+  document.getElementById('lb-img').src=url;
+  document.getElementById('lightbox').classList.add('open');
+}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 function saveResult(){
   const {skin,style}=answers;
