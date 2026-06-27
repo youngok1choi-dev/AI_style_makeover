@@ -814,27 +814,35 @@ function fallbackCard(label, idx=0){ label = escHtml(label);
     <div class="outfit-label">${label}</div>`;
 }
 
-// ─── spin 애니메이션 CSS 주입 ───
-if(!document.getElementById('spin-style')){
-  const st = document.createElement('style');
-  st.id = 'spin-style';
-  st.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-  document.head.appendChild(st);
-}
+// spin 애니메이션은 CSS에 이미 있음 (중복 방지)
 
 function imgUrl(q,i=0){ return ''; }
 function getCardData(q,i=0){ return ['linear-gradient(145deg,#2A5EC8,#1a3d8f)','👗',q]; }
 function showPage(id){
-  // .page + #page-home 모두 초기화
-  document.querySelectorAll('.page, #page-home').forEach(p=>{
+  // 1) 모든 .page 숨김
+  document.querySelectorAll('.page').forEach(p=>{
     p.classList.remove('active');
-    if(p.id !== 'page-home') p.style.display='';
+    p.style.display = 'none';
   });
-  document.getElementById('page-result').style.display='none';
-  const el=document.getElementById(id);
-  if(!el){ console.warn('showPage: element not found:', id); return; }
-  if(id==='page-result'){ el.style.display='block'; }
-  else{ el.classList.add('active'); }
+  // 2) #page-home 숨김
+  const homeEl = document.getElementById('page-home');
+  if(homeEl){ homeEl.classList.remove('active'); homeEl.style.display='none'; }
+  // 3) #page-result 숨김
+  const resEl = document.getElementById('page-result');
+  if(resEl){ resEl.style.display='none'; }
+
+  // 4) 대상 표시
+  const el = document.getElementById(id);
+  if(!el){ console.warn('showPage: not found:', id); return; }
+  if(id === 'page-result'){
+    el.style.display = 'block';
+  } else if(id === 'page-home'){
+    el.style.display = 'flex';
+    el.classList.add('active');
+  } else {
+    el.style.display = 'flex';
+    el.classList.add('active');
+  }
 }
 function goHome(){showPage('page-home');answers={};curStep=0;photoDataUrl=null;aiComment="";}
 function selectModule(m){curModule=m;showGender(m);}
@@ -949,11 +957,19 @@ function handlePhoto2(e){
   r.readAsDataURL(f);
 }
 async function finalize(){
-  // 로딩 화면 없이 즉시 처리
-  aiComment = buildLocalComment();
-  buildResult();
-  showPage('page-result');
-  // ③ 백그라운드에서 AI 코멘트 교체 시도 (결과 화면 이미 표시된 상태)
+  try {
+    // ① 로컬 코멘트 즉시 생성
+    aiComment = buildLocalComment();
+    // ② 결과 화면 즉시 표시
+    buildResult();
+    showPage('page-result');
+  } catch(err){
+    console.error('finalize 오류:', err);
+    alert('결과를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.');
+    showPage('page-photo');
+    return;
+  }
+  // ③ 백그라운드 AI 코멘트 (실패해도 무관)
   try {
     const apiResult = await Promise.race([
       fetchAI(),
