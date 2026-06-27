@@ -449,10 +449,13 @@
           </div>
           <div>
             <div style="color:#2A5EC8;font-size:10px;text-align:center;margin-bottom:6px;letter-spacing:1px;">AFTER</div>
-            <div class="outfit-img-wrap" onclick="openLightbox(afterImgUrl)">
-              <img id="after-img" src="" alt="after" onerror="this.style.display='none'"/>
+            <div class="outfit-img-wrap" id="after-img-wrap" style="cursor:default;">
+              <div id="after-img-inner" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#e8f0ff,#d0dcf4);">
+                <div style="width:32px;height:32px;border:3px solid #2A5EC8;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                <span style="color:#2A5EC8;font-size:11px;font-weight:600;">스타일 로딩중...</span>
+              </div>
               <div class="outfit-label" id="after-label"></div>
-              <div class="zoom-badge">🔍</div>
+              <div class="zoom-badge" id="after-zoom" style="display:none;">🔍</div>
             </div>
           </div>
         </div>
@@ -856,28 +859,48 @@ function buildResult(){
   });
   document.getElementById('daily-rows').innerHTML=dailyHtml;
 
-  // After img: Pixabay 실제 패션 사진
-  const afterQuery = oq ? oq[0] : (curGender==='male'?'men classic suit':'women elegant coat');
-  const afterEl = document.getElementById('after-img');
-  const afterCat = getCatKey(afterQuery);
+  // After img: Pixabay 실제 패션 사진 (비동기 컨테이너 방식)
+  const afterQuery  = oq ? oq[0] : (curGender==='male'?'men classic suit':'women elegant coat');
+  const afterCat    = getCatKey(afterQuery);
   const afterGender = curGender==='male'?'male':'female';
-  const afterQueries = PIXABAY_QUERIES[afterGender][afterCat]||PIXABAY_QUERIES[afterGender].classic;
-  afterEl.style.display = 'block';
-  afterEl.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top;border-radius:16px;cursor:pointer;background:#e8f0ff;';
-  afterEl.src = '';
-  afterEl.alt = si.name;
-  document.getElementById('after-label').textContent=si.name;
-  // 비동기 로딩
+  const afterQueries= PIXABAY_QUERIES[afterGender][afterCat]||PIXABAY_QUERIES[afterGender].classic;
+  const afterWrap   = document.getElementById('after-img-wrap');
+  const afterInner  = document.getElementById('after-img-inner');
+  const afterZoom   = document.getElementById('after-zoom');
+
+  document.getElementById('after-label').textContent = si.name;
+
+  // 로딩 스피너 표시
+  afterInner.innerHTML = '<div style="width:32px;height:32px;border:3px solid #2A5EC8;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div><span style="color:#2A5EC8;font-size:11px;font-weight:600;">스타일 로딩중...</span>';
+  afterWrap.style.cursor = 'default';
+  afterZoom.style.display = 'none';
+
   (async ()=>{
-    const imgs = await fetchPixabay(afterQueries[0], 2);
-    if(imgs.length > 0){
-      afterImgUrl = imgs[1] || imgs[0];
-      afterEl.src = afterImgUrl;
-      afterEl.onclick = () => openLightbox(afterImgUrl);
-    } else {
-      const uImgs = await fetchUnsplash(afterQueries[0], 1);
-      if(uImgs.length > 0){ afterImgUrl = uImgs[0]; afterEl.src = afterImgUrl; afterEl.onclick=()=>openLightbox(afterImgUrl); }
+    let url = null;
+    // 1차: Pixabay (여러 쿼리 시도)
+    for(let qi=0; qi<afterQueries.length && !url; qi++){
+      const imgs = await fetchPixabay(afterQueries[qi], qi+1);
+      if(imgs.length > 0) url = imgs[qi % imgs.length];
     }
+    // 2차 폴백: Unsplash
+    if(!url){
+      const uImgs = await fetchUnsplash(afterQueries[0], 1);
+      if(uImgs.length > 0) url = uImgs[0];
+    }
+    // 3차 폴백: GitHub raw 실착 사진
+    if(!url){
+      const P = "https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people";
+      url = afterGender==='male' ? `${P}/m_classic.png` : `${P}/f_classic.jpg`;
+    }
+
+    afterImgUrl = url;
+    afterInner.innerHTML = `<img src="${url}"
+      style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;border-radius:13px;"
+      alt="${si.name}"
+      onerror="this.src='https://raw.githubusercontent.com/youngok1choi-dev/AI_style_makeover/main/images/people/${afterGender==='male'?'m_classic.png':'f_classic.jpg'}'"/>`;
+    afterWrap.style.cursor = 'pointer';
+    afterWrap.onclick = () => openLightbox(afterImgUrl);
+    afterZoom.style.display = 'block';
   })();
 
   // 변신 후 스타일 룩: SVG 패션 일러스트
