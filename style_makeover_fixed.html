@@ -2,6 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<!-- v2026.06.27.fast -->
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AI 스타일 메이크오버</title>
 <style>
@@ -351,8 +355,8 @@
   </div>
 </div>
 
-<!-- LOADING (거의 표시 안 됨 - 즉시 결과로 이동) -->
-<div id="page-loading" class="page">
+<!-- LOADING 사용 안 함 -->
+<div id="page-loading" class="page" style="display:none!important;">
   <div style="text-align:center;">
     <div style="width:48px;height:48px;border:4px solid rgba(42,94,200,0.15);border-top:4px solid #2A5EC8;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 16px;"></div>
     <p style="color:#0A1E42;font-size:16px;font-weight:700;">분석 중...</p>
@@ -945,9 +949,8 @@ function handlePhoto2(e){
   r.readAsDataURL(f);
 }
 async function finalize(){
-  // ① 로컬 코멘트 즉시 생성
+  // 로딩 화면 없이 즉시 처리
   aiComment = buildLocalComment();
-  // ② 결과 화면 즉시 표시 (대기 없음)
   buildResult();
   showPage('page-result');
   // ③ 백그라운드에서 AI 코멘트 교체 시도 (결과 화면 이미 표시된 상태)
